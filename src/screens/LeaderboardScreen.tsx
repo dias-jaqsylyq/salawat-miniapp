@@ -15,6 +15,10 @@ function rankBadgeVariant(rank: number): "gold" | "secondary" | "outline" {
   return "outline";
 }
 
+function isTied(entries: LeaderboardEntry[], entry: LeaderboardEntry): boolean {
+  return entries.some((other) => other !== entry && other.rank === entry.rank);
+}
+
 export default function LeaderboardScreen({ initData }: Props) {
   const [entries, setEntries] = useState<LeaderboardEntry[] | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -54,12 +58,20 @@ export default function LeaderboardScreen({ initData }: Props) {
         <Card>
           <CardContent className="divide-y p-0">
             {entries.map((entry) => (
-              <div key={entry.rank} className="flex items-center justify-between px-4 py-3">
+              <div
+                key={`${entry.rank}-${entry.nickname}`}
+                className="flex items-center justify-between px-4 py-3"
+              >
                 <span className="flex items-center gap-3 text-sm font-medium text-foreground">
                   <Badge variant={rankBadgeVariant(entry.rank)} className="w-7 justify-center">
                     {entry.rank}
                   </Badge>
-                  {entry.nickname}
+                  <span className="flex flex-col">
+                    {entry.nickname}
+                    {isTied(entries, entry) && (
+                      <span className="text-xs font-normal text-muted-foreground">tied</span>
+                    )}
+                  </span>
                 </span>
                 <span className="text-sm text-muted-foreground">{entry.total}</span>
               </div>

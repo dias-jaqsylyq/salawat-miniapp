@@ -10,6 +10,8 @@ interface Props {
 }
 
 const QUICK_ADD = [10, 50, 100];
+/** Must stay in sync with salawat-bot MAX_LOG_COUNT. */
+const MAX_LOG_COUNT = 10_000;
 
 export default function LogSalawatScreen({ initData, onLogged }: Props) {
   const [amount, setAmount] = useState("");
@@ -20,6 +22,10 @@ export default function LogSalawatScreen({ initData, onLogged }: Props) {
   async function submit(count: number) {
     if (!Number.isInteger(count) || count <= 0) {
       setError("Enter a positive whole number.");
+      return;
+    }
+    if (count > MAX_LOG_COUNT) {
+      setError(`Maximum ${MAX_LOG_COUNT.toLocaleString()} salawat per submission.`);
       return;
     }
     setSubmitting(true);
@@ -66,6 +72,7 @@ export default function LogSalawatScreen({ initData, onLogged }: Props) {
           type="number"
           inputMode="numeric"
           min={1}
+          max={MAX_LOG_COUNT}
           step={1}
           value={amount}
           onChange={(e) => setAmount(e.target.value)}
