@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useState, type ReactNode } from "react";
 import { useTelegram } from "./telegram/useTelegram.ts";
 import { getProgress } from "./api/client.ts";
-import type { RegisteredProgress } from "./api/types.ts";
+import { messageForApiError } from "./api/errors.ts";
+import type { ChallengeMeta, RegisteredProgress } from "./api/types.ts";
 import RegistrationScreen from "./screens/RegistrationScreen.tsx";
 import LogSalawatScreen from "./screens/LogSalawatScreen.tsx";
 import ProgressScreen from "./screens/ProgressScreen.tsx";
@@ -11,8 +12,9 @@ import { Button } from "@/components/ui/button";
 
 type LoadState =
   | { status: "loading" }
-  | { status: "error" }
-  | { status: "needs-registration" }
+  | { status: "error"; message: string }
+  | { status: "challenge-closed"; meta: ChallengeMeta; reason: "not_started" | "ended" }
+  | { status: "needs-registration"; meta: ChallengeMeta }
   | { status: "ready"; progress: RegisteredProgress };
 
 function Centered({ children }: { children: ReactNode }) {
@@ -39,9 +41,24 @@ export default function App() {
   const loadProgress = useCallback(async () => {
     try {
       const result = await getProgress(initData);
-      setState(result.registered ? { status: "ready", progress: result } : { status: "needs-registration" });
-    } catch {
-      setState({ status: "error" });
+      if (!result.registered) {
+        if (result.challengeStatus === "not_started") {
+          setState({ status: "challenge-closed", meta: result, reason: "not_started" });
+          return;
+        }
+        if (result.challengeStatus === "ended") {
+          setState({ status: "challenge-closed", meta: result, reason: "ended" });
+          return;
+        }
+        setState({ status: "needs-registration", meta: result });
+        return;
+      }
+      setState({ status: "ready", progress: result });
+    } catch (err) {
+      setState({
+        status: "error",
+        message: messageForApiError(err, "Couldn't reach the server."),
+      });
     }
   }, [initData]);
 
@@ -70,10 +87,22 @@ export default function App() {
   if (state.status === "error") {
     return (
       <Centered>
-        <p className="text-destructive">Couldn't reach the server.</p>
+        <p className="text-destructive">{state.message}</p>
         <Button onClick={() => void loadProgress()} className="mt-3">
           Retry
         </Button>
+      </Centered>
+    );
+  }
+
+  if (state.status === "challenge-closed") {
+    const copy =
+      state.reason === "not_started"
+        ? `The challenge starts on ${state.meta.challengeStartDate}. Check back then!`
+        : `The challenge ended on ${state.meta.challengeEndDate}.`;
+    return (
+      <Centered>
+        <p className="text-muted-foreground">{copy}</p>
       </Centered>
     );
   }
@@ -85,7 +114,18 @@ export default function App() {
   return (
     <div className="min-h-screen bg-background pb-16">
       {activeTab === "progress" && <ProgressScreen progress={state.progress} />}
-      {activeTab === "log" && <LogSalawatScreen initData={initData} onLogged={() => void loadProgress()} />}
+      {activeTab === "log" &&
+        (state.progress.challengeStatus === "active" ? (
+          <LogSalawatScreen initData={initData} onLogged={() => void loadProgress()} />
+        ) : (
+          <div className="mx-auto max-w-sm px-4 py-6">
+            <p className="text-sm text-muted-foreground">
+              {state.progress.challengeStatus === "ended"
+                ? `Logging closed — the challenge ended on ${state.progress.challengeEndDate}.`
+                : `Logging opens on ${state.progress.challengeStartDate}.`}
+            </p>
+          </div>
+        ))}
       {activeTab === "leaderboard" && <LeaderboardScreen initData={initData} />}
       <TabBar activeTab={activeTab} onChange={setActiveTab} />
     </div>

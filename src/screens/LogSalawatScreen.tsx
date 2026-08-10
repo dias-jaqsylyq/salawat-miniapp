@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from "react";
-import { ApiError, logSalawat } from "../api/client.ts";
+import { logSalawat } from "../api/client.ts";
+import { messageForApiError } from "../api/errors.ts";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 
@@ -12,6 +13,8 @@ interface Props {
 const QUICK_ADD = [10, 50, 100];
 /** Must stay in sync with salawat-bot MAX_LOG_COUNT. */
 const MAX_LOG_COUNT = 10_000;
+/** Honor-system confirm threshold for large submissions. */
+const CONFIRM_THRESHOLD = 1_000;
 
 export default function LogSalawatScreen({ initData, onLogged }: Props) {
   const [amount, setAmount] = useState("");
@@ -20,6 +23,8 @@ export default function LogSalawatScreen({ initData, onLogged }: Props) {
   const [confirmation, setConfirmation] = useState<string | null>(null);
 
   async function submit(count: number) {
+    if (submitting) return;
+
     if (!Number.isInteger(count) || count <= 0) {
       setError("Enter a positive whole number.");
       return;
@@ -28,6 +33,11 @@ export default function LogSalawatScreen({ initData, onLogged }: Props) {
       setError(`Maximum ${MAX_LOG_COUNT.toLocaleString()} salawat per submission.`);
       return;
     }
+    if (count >= CONFIRM_THRESHOLD) {
+      const ok = window.confirm(`Log ${count.toLocaleString()} salawat?`);
+      if (!ok) return;
+    }
+
     setSubmitting(true);
     setError(null);
     setConfirmation(null);
@@ -37,7 +47,7 @@ export default function LogSalawatScreen({ initData, onLogged }: Props) {
       setConfirmation(`Logged ${count} salawat! Running total: ${newTotal}.`);
       setAmount("");
     } catch (err) {
-      setError(err instanceof ApiError ? "Couldn't log that — please try again." : "Network error — please try again.");
+      setError(messageForApiError(err, "Couldn't log that — please try again."));
     } finally {
       setSubmitting(false);
     }

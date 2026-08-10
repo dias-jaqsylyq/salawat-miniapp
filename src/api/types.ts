@@ -1,3 +1,11 @@
+export type ChallengeStatus = "not_started" | "active" | "ended";
+
+export interface ChallengeMeta {
+  challengeStatus: ChallengeStatus;
+  challengeStartDate: string;
+  challengeEndDate: string;
+}
+
 export interface RegisterResponse {
   success: true;
   user: { id: number; nickname: string; goal: number };
@@ -8,9 +16,11 @@ export interface LogResponse {
   newTotal: number;
 }
 
-export type ProgressResponse = { registered: false } | RegisteredProgress;
+export type ProgressResponse =
+  | ({ registered: false } & ChallengeMeta)
+  | RegisteredProgress;
 
-export interface RegisteredProgress {
+export interface RegisteredProgress extends ChallengeMeta {
   registered: true;
   nickname: string;
   total: number;

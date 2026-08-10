@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from "react";
 import { Moon } from "lucide-react";
-import { ApiError, register } from "../api/client.ts";
+import { register } from "../api/client.ts";
+import { messageForApiError } from "../api/errors.ts";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -11,6 +12,9 @@ interface Props {
   onRegistered: () => void;
 }
 
+/** Must stay in sync with salawat-bot MAX_GOAL. */
+const MAX_GOAL = 100_000_000;
+
 function validate(nickname: string, goal: string): string | null {
   const trimmed = nickname.trim();
   if (trimmed.length === 0 || trimmed.length > 50) {
@@ -19,6 +23,9 @@ function validate(nickname: string, goal: string): string | null {
   const goalNum = Number(goal);
   if (!Number.isInteger(goalNum) || goalNum <= 0) {
     return "Goal must be a positive whole number.";
+  }
+  if (goalNum > MAX_GOAL) {
+    return `Goal must be at most ${MAX_GOAL.toLocaleString()}.`;
   }
   return null;
 }
@@ -31,6 +38,8 @@ export default function RegistrationScreen({ initData, onRegistered }: Props) {
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
+    if (submitting) return;
+
     const validationError = validate(nickname, goal);
     if (validationError) {
       setError(validationError);
@@ -43,7 +52,7 @@ export default function RegistrationScreen({ initData, onRegistered }: Props) {
       await register(initData, nickname.trim(), Number(goal));
       onRegistered();
     } catch (err) {
-      setError(err instanceof ApiError ? "Couldn't register — please try again." : "Network error — please try again.");
+      setError(messageForApiError(err, "Couldn't register — please try again."));
     } finally {
       setSubmitting(false);
     }
@@ -81,6 +90,7 @@ export default function RegistrationScreen({ initData, onRegistered }: Props) {
                 type="number"
                 inputMode="numeric"
                 min={1}
+                max={MAX_GOAL}
                 step={1}
                 value={goal}
                 onChange={(e) => setGoal(e.target.value)}

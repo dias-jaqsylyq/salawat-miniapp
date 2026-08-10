@@ -1,9 +1,11 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Trophy } from "lucide-react";
-import { ApiError, getLeaderboard } from "../api/client.ts";
+import { getLeaderboard } from "../api/client.ts";
+import { messageForApiError } from "../api/errors.ts";
 import type { LeaderboardEntry } from "../api/types.ts";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 
 interface Props {
   initData: string;
@@ -22,22 +24,27 @@ function isTied(entries: LeaderboardEntry[], entry: LeaderboardEntry): boolean {
 export default function LeaderboardScreen({ initData }: Props) {
   const [entries, setEntries] = useState<LeaderboardEntry[] | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    let cancelled = false;
+  const load = useCallback(() => {
+    setLoading(true);
+    setError(null);
+    setEntries(null);
     getLeaderboard(initData)
       .then(({ leaderboard }) => {
-        if (!cancelled) setEntries(leaderboard);
+        setEntries(leaderboard);
       })
       .catch((err) => {
-        if (!cancelled) {
-          setError(err instanceof ApiError ? "Couldn't load the leaderboard." : "Network error — please try again.");
-        }
+        setError(messageForApiError(err, "Couldn't load the leaderboard."));
+      })
+      .finally(() => {
+        setLoading(false);
       });
-    return () => {
-      cancelled = true;
-    };
   }, [initData]);
+
+  useEffect(() => {
+    load();
+  }, [load]);
 
   return (
     <div className="mx-auto max-w-sm space-y-4 px-4 py-6">
@@ -46,15 +53,22 @@ export default function LeaderboardScreen({ initData }: Props) {
         Leaderboard
       </h2>
 
-      {error && <p className="text-sm text-destructive">{error}</p>}
+      {error && (
+        <div className="space-y-2">
+          <p className="text-sm text-destructive">{error}</p>
+          <Button type="button" variant="secondary" size="sm" onClick={load}>
+            Retry
+          </Button>
+        </div>
+      )}
 
-      {!error && entries === null && <p className="text-sm text-muted-foreground">Loading…</p>}
+      {loading && <p className="text-sm text-muted-foreground">Loading…</p>}
 
-      {entries !== null && entries.length === 0 && (
+      {!loading && !error && entries !== null && entries.length === 0 && (
         <p className="text-sm text-muted-foreground">No one's registered yet.</p>
       )}
 
-      {entries !== null && entries.length > 0 && (
+      {!loading && !error && entries !== null && entries.length > 0 && (
         <Card>
           <CardContent className="divide-y p-0">
             {entries.map((entry) => (
