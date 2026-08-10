@@ -7,6 +7,7 @@ import LogSalawatScreen from "./screens/LogSalawatScreen.tsx";
 import ProgressScreen from "./screens/ProgressScreen.tsx";
 import LeaderboardScreen from "./screens/LeaderboardScreen.tsx";
 import TabBar, { type Tab } from "./components/TabBar.tsx";
+import { Button } from "@/components/ui/button";
 
 type LoadState =
   | { status: "loading" }
@@ -18,10 +19,22 @@ function Centered({ children }: { children: ReactNode }) {
   return <div className="flex min-h-screen flex-col items-center justify-center px-6 text-center">{children}</div>;
 }
 
+/** Keeps the app's theme in sync with Telegram's color scheme (falls back to system preference outside Telegram). */
+function useSyncDarkMode() {
+  useEffect(() => {
+    const isDark =
+      window.Telegram?.WebApp?.colorScheme === "dark" ||
+      (!window.Telegram?.WebApp && window.matchMedia("(prefers-color-scheme: dark)").matches);
+    document.documentElement.classList.toggle("dark", isDark);
+  }, []);
+}
+
 export default function App() {
   const { initData, available } = useTelegram();
   const [state, setState] = useState<LoadState>({ status: "loading" });
   const [activeTab, setActiveTab] = useState<Tab>("progress");
+
+  useSyncDarkMode();
 
   const loadProgress = useCallback(async () => {
     try {
@@ -41,7 +54,7 @@ export default function App() {
   if (!available) {
     return (
       <Centered>
-        <p className="text-gray-600">Open this from the Salawat Challenge bot's menu button in Telegram.</p>
+        <p className="text-muted-foreground">Open this from the Salawat Challenge bot's menu button in Telegram.</p>
       </Centered>
     );
   }
@@ -49,7 +62,7 @@ export default function App() {
   if (state.status === "loading") {
     return (
       <Centered>
-        <p className="text-gray-500">Loading…</p>
+        <p className="text-muted-foreground">Loading…</p>
       </Centered>
     );
   }
@@ -57,14 +70,10 @@ export default function App() {
   if (state.status === "error") {
     return (
       <Centered>
-        <p className="text-red-600">Couldn't reach the server.</p>
-        <button
-          type="button"
-          onClick={() => void loadProgress()}
-          className="mt-3 rounded-lg bg-emerald-600 px-4 py-2 text-white"
-        >
+        <p className="text-destructive">Couldn't reach the server.</p>
+        <Button onClick={() => void loadProgress()} className="mt-3">
           Retry
-        </button>
+        </Button>
       </Centered>
     );
   }
@@ -74,7 +83,7 @@ export default function App() {
   }
 
   return (
-    <div className="pb-16">
+    <div className="min-h-screen bg-background pb-16">
       {activeTab === "progress" && <ProgressScreen progress={state.progress} />}
       {activeTab === "log" && <LogSalawatScreen initData={initData} onLogged={() => void loadProgress()} />}
       {activeTab === "leaderboard" && <LeaderboardScreen initData={initData} />}

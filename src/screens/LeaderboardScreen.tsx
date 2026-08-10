@@ -1,12 +1,19 @@
 import { useEffect, useState } from "react";
+import { Trophy } from "lucide-react";
 import { ApiError, getLeaderboard } from "../api/client.ts";
 import type { LeaderboardEntry } from "../api/types.ts";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 
 interface Props {
   initData: string;
 }
 
-const MEDALS = ["🥇", "🥈", "🥉"];
+function rankBadgeVariant(rank: number): "gold" | "secondary" | "outline" {
+  if (rank === 1) return "gold";
+  if (rank <= 3) return "secondary";
+  return "outline";
+}
 
 export default function LeaderboardScreen({ initData }: Props) {
   const [entries, setEntries] = useState<LeaderboardEntry[] | null>(null);
@@ -30,28 +37,35 @@ export default function LeaderboardScreen({ initData }: Props) {
 
   return (
     <div className="mx-auto max-w-sm space-y-4 px-4 py-6">
-      <h2 className="text-lg font-semibold text-gray-900">🏆 Leaderboard</h2>
+      <h2 className="flex items-center gap-2 text-lg font-semibold text-foreground">
+        <Trophy className="h-5 w-5 text-accent" aria-hidden="true" />
+        Leaderboard
+      </h2>
 
-      {error && <p className="text-sm text-red-600">{error}</p>}
+      {error && <p className="text-sm text-destructive">{error}</p>}
 
-      {!error && entries === null && <p className="text-sm text-gray-500">Loading…</p>}
+      {!error && entries === null && <p className="text-sm text-muted-foreground">Loading…</p>}
 
       {entries !== null && entries.length === 0 && (
-        <p className="text-sm text-gray-500">No one's registered yet.</p>
+        <p className="text-sm text-muted-foreground">No one's registered yet.</p>
       )}
 
       {entries !== null && entries.length > 0 && (
-        <ol className="divide-y divide-gray-100 rounded-xl bg-white shadow-sm">
-          {entries.map((entry) => (
-            <li key={entry.rank} className="flex items-center justify-between px-4 py-3">
-              <span className="flex items-center gap-2 text-sm font-medium text-gray-900">
-                <span className="w-6 text-center">{MEDALS[entry.rank - 1] ?? entry.rank}</span>
-                {entry.nickname}
-              </span>
-              <span className="text-sm text-gray-600">{entry.total}</span>
-            </li>
-          ))}
-        </ol>
+        <Card>
+          <CardContent className="divide-y p-0">
+            {entries.map((entry) => (
+              <div key={entry.rank} className="flex items-center justify-between px-4 py-3">
+                <span className="flex items-center gap-3 text-sm font-medium text-foreground">
+                  <Badge variant={rankBadgeVariant(entry.rank)} className="w-7 justify-center">
+                    {entry.rank}
+                  </Badge>
+                  {entry.nickname}
+                </span>
+                <span className="text-sm text-muted-foreground">{entry.total}</span>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
       )}
     </div>
   );

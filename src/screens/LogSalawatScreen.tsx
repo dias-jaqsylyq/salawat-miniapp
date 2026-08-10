@@ -1,5 +1,7 @@
 import { useState, type FormEvent } from "react";
 import { ApiError, logSalawat } from "../api/client.ts";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 
 interface Props {
   initData: string;
@@ -42,24 +44,25 @@ export default function LogSalawatScreen({ initData, onLogged }: Props) {
 
   return (
     <div className="mx-auto max-w-sm space-y-6 px-4 py-6">
-      <h2 className="text-lg font-semibold text-gray-900">Log Salawat</h2>
+      <h2 className="text-lg font-semibold text-foreground">Log Salawat</h2>
 
       <div className="grid grid-cols-3 gap-3">
         {QUICK_ADD.map((n) => (
-          <button
+          <Button
             key={n}
             type="button"
+            variant="secondary"
+            size="lg"
             disabled={submitting}
             onClick={() => void submit(n)}
-            className="rounded-lg bg-emerald-100 py-3 font-medium text-emerald-800 disabled:opacity-50"
           >
             +{n}
-          </button>
+          </Button>
         ))}
       </div>
 
       <form onSubmit={handleSubmit} className="flex gap-2">
-        <input
+        <Input
           type="number"
           inputMode="numeric"
           min={1}
@@ -67,19 +70,15 @@ export default function LogSalawatScreen({ initData, onLogged }: Props) {
           value={amount}
           onChange={(e) => setAmount(e.target.value)}
           placeholder="Custom amount"
-          className="flex-1 rounded-lg border border-gray-300 px-3 py-2 text-base focus:border-emerald-500 focus:outline-none"
+          className="flex-1"
         />
-        <button
-          type="submit"
-          disabled={submitting}
-          className="rounded-lg bg-emerald-600 px-4 py-2 font-medium text-white disabled:opacity-50"
-        >
+        <Button type="submit" disabled={submitting}>
           Log
-        </button>
+        </Button>
       </form>
 
-      {confirmation && <p className="text-sm text-emerald-700">{confirmation}</p>}
-      {error && <p className="text-sm text-red-600">{error}</p>}
+      {confirmation && <p className="text-sm text-primary">{confirmation}</p>}
+      {error && <p className="text-sm text-destructive">{error}</p>}
     </div>
   );
 }
