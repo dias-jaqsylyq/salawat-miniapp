@@ -13,7 +13,7 @@ import { Button } from "@/components/ui/button";
 type LoadState =
   | { status: "loading" }
   | { status: "error"; message: string }
-  | { status: "challenge-closed"; meta: ChallengeMeta; reason: "not_started" | "ended" }
+  | { status: "challenge-closed"; meta: ChallengeMeta }
   | { status: "needs-registration"; meta: ChallengeMeta }
   | { status: "ready"; progress: RegisteredProgress };
 
@@ -42,12 +42,9 @@ export default function App() {
     try {
       const result = await getProgress(initData);
       if (!result.registered) {
-        if (result.challengeStatus === "not_started") {
-          setState({ status: "challenge-closed", meta: result, reason: "not_started" });
-          return;
-        }
+        // Only block new joiners after the challenge has ended.
         if (result.challengeStatus === "ended") {
-          setState({ status: "challenge-closed", meta: result, reason: "ended" });
+          setState({ status: "challenge-closed", meta: result });
           return;
         }
         setState({ status: "needs-registration", meta: result });
@@ -96,13 +93,11 @@ export default function App() {
   }
 
   if (state.status === "challenge-closed") {
-    const copy =
-      state.reason === "not_started"
-        ? `The challenge starts on ${state.meta.challengeStartDate}. Check back then!`
-        : `The challenge ended on ${state.meta.challengeEndDate}.`;
     return (
       <Centered>
-        <p className="text-muted-foreground">{copy}</p>
+        <p className="text-muted-foreground">
+          The challenge ended on {state.meta.challengeEndDate}.
+        </p>
       </Centered>
     );
   }
@@ -115,16 +110,14 @@ export default function App() {
     <div className="min-h-screen bg-background pb-16">
       {activeTab === "progress" && <ProgressScreen progress={state.progress} />}
       {activeTab === "log" &&
-        (state.progress.challengeStatus === "active" ? (
-          <LogSalawatScreen initData={initData} onLogged={() => void loadProgress()} />
-        ) : (
+        (state.progress.challengeStatus === "ended" ? (
           <div className="mx-auto max-w-sm px-4 py-6">
             <p className="text-sm text-muted-foreground">
-              {state.progress.challengeStatus === "ended"
-                ? `Logging closed — the challenge ended on ${state.progress.challengeEndDate}.`
-                : `Logging opens on ${state.progress.challengeStartDate}.`}
+              Logging closed — the challenge ended on {state.progress.challengeEndDate}.
             </p>
           </div>
+        ) : (
+          <LogSalawatScreen initData={initData} onLogged={() => void loadProgress()} />
         ))}
       {activeTab === "leaderboard" && <LeaderboardScreen initData={initData} />}
       <TabBar activeTab={activeTab} onChange={setActiveTab} />

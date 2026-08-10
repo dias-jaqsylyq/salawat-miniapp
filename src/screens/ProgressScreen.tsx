@@ -10,9 +10,6 @@ function daysLeftCopy(progress: RegisteredProgress): string {
   if (progress.challengeStatus === "ended") {
     return `Challenge ended on ${progress.challengeEndDate}.`;
   }
-  if (progress.challengeStatus === "not_started") {
-    return `Challenge starts on ${progress.challengeStartDate}.`;
-  }
   if (progress.daysLeft === 0) {
     return "Today is the last day!";
   }
