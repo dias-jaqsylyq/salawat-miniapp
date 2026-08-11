@@ -4,8 +4,6 @@ import { getLeaderboard } from "../api/client.ts";
 import { messageForApiError } from "../api/errors.ts";
 import type { LeaderboardEntry, RegisteredProgress } from "../api/types.ts";
 import { daysLeftCopy } from "../lib/challengeCopy.ts";
-import { resolveTelegramId } from "../lib/telegramId.ts";
-import { useTelegram } from "../telegram/useTelegram.ts";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -35,9 +33,6 @@ function isTied(entries: LeaderboardEntry[], entry: LeaderboardEntry): boolean {
 }
 
 export default function LeaderboardScreen({ initData, progress }: Props) {
-  const { user } = useTelegram();
-  const myTelegramId = resolveTelegramId(initData, user?.id);
-
   const [entries, setEntries] = useState<LeaderboardEntry[] | null>(null);
   const [jamaatTotal, setJamaatTotal] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -106,38 +101,35 @@ export default function LeaderboardScreen({ initData, progress }: Props) {
       {!loading && !error && entries !== null && entries.length > 0 && (
         <Card>
           <CardContent className="divide-y p-0">
-            {entries.map((entry) => {
-              const isYou = myTelegramId !== null && entry.telegramId === myTelegramId;
-              return (
-                <div
-                  key={`${entry.telegramId}-${entry.nickname}`}
-                  className={cn(
-                    "flex items-center justify-between px-4 py-3",
-                    rankRowTint(entry.rank),
-                    isYou && "border-l-2 border-primary",
-                    isYou && entry.rank > 3 && "bg-primary/5"
-                  )}
-                >
-                  <span className="flex items-center gap-3 text-sm font-medium text-foreground">
-                    <Badge variant={rankBadgeVariant(entry.rank)} className="w-7 justify-center">
-                      {entry.rank}
-                    </Badge>
-                    <span className="flex flex-col">
-                      <span>
-                        {entry.nickname}
-                        {isYou ? " (You)" : ""}
-                      </span>
-                      {isTied(entries, entry) && (
-                        <span className="text-xs font-normal text-muted-foreground">tied</span>
-                      )}
+            {entries.map((entry, index) => (
+              <div
+                key={`${entry.rank}-${entry.nickname}-${index}`}
+                className={cn(
+                  "flex items-center justify-between px-4 py-3",
+                  rankRowTint(entry.rank),
+                  entry.isYou && "border-l-2 border-primary",
+                  entry.isYou && entry.rank > 3 && "bg-primary/5"
+                )}
+              >
+                <span className="flex items-center gap-3 text-sm font-medium text-foreground">
+                  <Badge variant={rankBadgeVariant(entry.rank)} className="w-7 justify-center">
+                    {entry.rank}
+                  </Badge>
+                  <span className="flex flex-col">
+                    <span>
+                      {entry.nickname}
+                      {entry.isYou ? " (You)" : ""}
                     </span>
+                    {isTied(entries, entry) && (
+                      <span className="text-xs font-normal text-muted-foreground">tied</span>
+                    )}
                   </span>
-                  <span className="text-sm tabular-nums text-muted-foreground">
-                    {entry.total.toLocaleString()}
-                  </span>
-                </div>
-              );
-            })}
+                </span>
+                <span className="text-sm tabular-nums text-muted-foreground">
+                  {entry.total.toLocaleString()}
+                </span>
+              </div>
+            ))}
           </CardContent>
         </Card>
       )}

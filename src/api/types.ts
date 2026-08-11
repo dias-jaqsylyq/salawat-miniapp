@@ -55,7 +55,8 @@ export interface LeaderboardEntry {
   nickname: string;
   total: number;
   rank: number;
-  telegramId: number;
+  /** Server-computed: true when this row is the authenticated viewer. */
+  isYou: boolean;
 }
 
 export interface LeaderboardResponse {
