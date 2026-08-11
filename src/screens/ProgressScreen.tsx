@@ -1,5 +1,6 @@
 import { MoonStar, Settings } from "lucide-react";
 import type { DayBreakdown, RegisteredProgress } from "../api/types.ts";
+import VirtueReminder from "../components/VirtueReminder.tsx";
 import { daysLeftCopy } from "../lib/challengeCopy.ts";
 import { formatHijriDate } from "../lib/hijriDate.ts";
 import { Button } from "@/components/ui/button";
@@ -57,7 +58,7 @@ export default function ProgressScreen({ progress, onOpenSettings }: Props) {
   const hijriLabel = formatHijriDate();
 
   return (
-    <div className="mx-auto max-w-sm px-4 py-6">
+    <div className="mx-auto max-w-sm space-y-4 px-4 py-6">
       <Card>
         <CardHeader>
           <div className="flex items-start justify-between gap-3">
@@ -111,6 +112,8 @@ export default function ProgressScreen({ progress, onOpenSettings }: Props) {
           </div>
         </CardContent>
       </Card>
+
+      <VirtueReminder />
     </div>
   );
 }
