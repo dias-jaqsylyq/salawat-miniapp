@@ -8,6 +8,13 @@ export interface TelegramWebAppUser {
   photo_url?: string;
 }
 
+/** https://core.telegram.org/bots/webapps#hapticfeedback */
+interface TelegramHapticFeedback {
+  impactOccurred(style: "light" | "medium" | "heavy" | "rigid" | "soft"): void;
+  notificationOccurred(type: "error" | "success" | "warning"): void;
+  selectionChanged(): void;
+}
+
 interface TelegramWebApp {
   initData: string;
   initDataUnsafe: {
@@ -15,6 +22,7 @@ interface TelegramWebApp {
     [key: string]: unknown;
   };
   colorScheme: "light" | "dark";
+  HapticFeedback: TelegramHapticFeedback;
   ready(): void;
   expand(): void;
 }
