@@ -27,6 +27,11 @@ export interface DayBreakdown {
   date: string;
   total: number;
   metGoal: boolean;
+  /**
+   * True for days before the user was eligible (challenge start / registration).
+   * Not missed and not makeup-eligible. Optional for older API responses.
+   */
+  locked?: boolean;
 }
 
 export interface DayOverrideResponse {
