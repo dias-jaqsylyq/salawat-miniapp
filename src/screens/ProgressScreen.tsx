@@ -42,16 +42,17 @@ function todayPercent(todayTotal: number, dailyGoal: number): number {
 /** Most recent missed past day in last7Days (closest to today), or null. */
 function mostRecentMissedPastDay(days: DayBreakdown[]): DayBreakdown | null {
   if (days.length === 0) return null;
-  // oldest → newest; skip today (last index)
+  // oldest → newest; skip today (last index) and locked (pre-registration) days
   for (let i = days.length - 2; i >= 0; i--) {
     const day = days[i]!;
+    if (day.locked) continue;
     if (!day.metGoal) return day;
   }
   return null;
 }
 
 function dotClass(day: DayBreakdown, isToday: boolean): string {
-  if (isToday) {
+  if (isToday || day.locked) {
     return day.metGoal
       ? "h-3.5 w-3.5 rounded-full bg-primary"
       : "h-3.5 w-3.5 rounded-full border-2 border-muted-foreground/40 bg-transparent";
@@ -77,14 +78,20 @@ function WeekTracker({ days, busyDate, onTogglePast }: WeekTrackerProps) {
         {days.map((day) => {
           const isToday = day.date === todayDate;
           const label = `${day.date}: ${day.total.toLocaleString()}${
-            day.metGoal ? " (goal met)" : isToday ? " (in progress)" : " (missed)"
+            day.locked
+              ? " (not applicable)"
+              : day.metGoal
+                ? " (goal met)"
+                : isToday
+                  ? " (in progress)"
+                  : " (missed)"
           }`;
 
-          if (isToday) {
+          if (isToday || day.locked) {
             return (
               <div key={day.date} className="flex flex-1 flex-col items-center gap-1.5">
                 <span
-                  className={dotClass(day, true)}
+                  className={dotClass(day, isToday)}
                   title={label}
                   aria-label={label}
                 />
