@@ -1,6 +1,3 @@
-/** Match salawat-bot default TIMEZONE so "today" aligns with Progress. */
-const CHALLENGE_TIMEZONE = "Asia/Hong_Kong";
-
 export type AyahReminder = {
   kind: "ayah";
   arabic: string;
@@ -48,30 +45,14 @@ export const REMINDERS: readonly VirtueReminder[] = [
   },
 ] as const;
 
-function gregorianPartsInTimezone(
-  now: Date,
-  timeZone: string,
-): { year: number; month: number; day: number } {
-  const parts = new Intl.DateTimeFormat("en-CA", {
-    timeZone,
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  }).formatToParts(now);
-
-  const get = (type: Intl.DateTimeFormatPartTypes) =>
-    Number(parts.find((p) => p.type === type)?.value);
-
-  return { year: get("year"), month: get("month"), day: get("day") };
-}
-
-/** Deterministic daily index: same HKT calendar day → same reminder for all users. */
-export function reminderIndexForDate(now: Date = new Date()): number {
-  const { year, month, day } = gregorianPartsInTimezone(now, CHALLENGE_TIMEZONE);
-  const epochDay = Math.floor(Date.UTC(year, month - 1, day) / 86_400_000);
-  return ((epochDay % REMINDERS.length) + REMINDERS.length) % REMINDERS.length;
-}
-
-export function todaysReminder(now: Date = new Date()): VirtueReminder {
-  return REMINDERS[reminderIndexForDate(now)]!;
+/** Fisher–Yates shuffle of a copy of REMINDERS (new order per session). */
+export function shuffleReminders(): VirtueReminder[] {
+  const items = [...REMINDERS];
+  for (let i = items.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    const tmp = items[i]!;
+    items[i] = items[j]!;
+    items[j] = tmp;
+  }
+  return items;
 }
