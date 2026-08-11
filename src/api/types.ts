@@ -14,6 +14,8 @@ export interface RegisterResponse {
 export interface LogResponse {
   success: true;
   newTotal: number;
+  /** Salawat logged today (challenge TIMEZONE day boundary), after this log. */
+  newTodayTotal: number;
 }
 
 export type ProgressResponse =
@@ -24,6 +26,8 @@ export interface RegisteredProgress extends ChallengeMeta {
   registered: true;
   nickname: string;
   total: number;
+  /** Salawat logged today using the challenge TIMEZONE day boundary. */
+  todayTotal: number;
   goal: number;
   percentComplete: number;
   daysLeft: number;
