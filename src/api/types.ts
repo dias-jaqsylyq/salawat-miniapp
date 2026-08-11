@@ -29,6 +29,12 @@ export interface DayBreakdown {
   metGoal: boolean;
 }
 
+export interface DayOverrideResponse {
+  success: true;
+  streak: number;
+  last7Days: DayBreakdown[];
+}
+
 export interface RegisteredProgress extends ChallengeMeta {
   registered: true;
   nickname: string;
