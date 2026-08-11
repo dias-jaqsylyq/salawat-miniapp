@@ -1,6 +1,7 @@
-import { Settings } from "lucide-react";
+import { MoonStar, Settings } from "lucide-react";
 import type { DayBreakdown, RegisteredProgress } from "../api/types.ts";
 import { daysLeftCopy } from "../lib/challengeCopy.ts";
+import { formatHijriDate } from "../lib/hijriDate.ts";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
@@ -53,6 +54,7 @@ function WeekTracker({ days }: { days: DayBreakdown[] }) {
 export default function ProgressScreen({ progress, onOpenSettings }: Props) {
   const { nickname, total, todayTotal, dailyGoal, streak, last7Days } = progress;
   const percent = todayPercent(todayTotal, dailyGoal);
+  const hijriLabel = formatHijriDate();
 
   return (
     <div className="mx-auto max-w-sm px-4 py-6">
@@ -75,6 +77,10 @@ export default function ProgressScreen({ progress, onOpenSettings }: Props) {
               <Settings className="h-5 w-5" />
             </Button>
           </div>
+          <span className="inline-flex w-fit items-center gap-1.5 rounded-full bg-accent/10 px-2.5 py-1 text-xs font-medium text-[#854d0e] dark:bg-accent/15 dark:text-[#e6bf6a]">
+            <MoonStar className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+            {hijriLabel}
+          </span>
           <CardDescription>Keep it up, {nickname}!</CardDescription>
         </CardHeader>
 
