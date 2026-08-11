@@ -22,10 +22,10 @@ function validate(nickname: string, goal: string): string | null {
   }
   const goalNum = Number(goal);
   if (!Number.isInteger(goalNum) || goalNum <= 0) {
-    return "Goal must be a positive whole number.";
+    return "Daily goal must be a positive whole number.";
   }
   if (goalNum > MAX_GOAL) {
-    return `Goal must be at most ${MAX_GOAL.toLocaleString()}.`;
+    return `Daily goal must be at most ${MAX_GOAL.toLocaleString()}.`;
   }
   return null;
 }
@@ -84,7 +84,7 @@ export default function RegistrationScreen({ initData, onRegistered }: Props) {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="goal">Monthly salawat goal</Label>
+              <Label htmlFor="goal">Daily salawat goal</Label>
               <Input
                 id="goal"
                 type="number"
@@ -94,7 +94,7 @@ export default function RegistrationScreen({ initData, onRegistered }: Props) {
                 step={1}
                 value={goal}
                 onChange={(e) => setGoal(e.target.value)}
-                placeholder="e.g. 3000"
+                placeholder="e.g. 100"
               />
             </div>
 
