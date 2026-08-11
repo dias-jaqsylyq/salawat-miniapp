@@ -40,7 +40,7 @@ npm run preview     # preview the production build locally
 ## Structure
 - `src/telegram/` — `window.Telegram.WebApp` bootstrapping (`useTelegram` hook) and ambient types.
 - `src/api/` — fetch client (attaches `Authorization: tma <initData>` to every request) and response types mirroring the backend contract exactly.
-- `src/screens/` — Registration (one-time gate), Log Salawat, My Progress, Leaderboard.
+- `src/screens/` — Registration (one-time gate), Log Salawat, My Progress (with Settings), Leaderboard.
 - `src/components/` — `TabBar`, `ProgressBar` (visual width clamped to 100%, numeric label uncapped).
 - `App.tsx` — checks `GET /api/progress` on load to decide registration-gate vs. main app; holds the tab state and shared progress data.
 

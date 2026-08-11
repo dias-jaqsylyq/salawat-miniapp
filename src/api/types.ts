@@ -54,3 +54,19 @@ export interface LeaderboardEntry {
 export interface LeaderboardResponse {
   leaderboard: LeaderboardEntry[];
 }
+
+export interface ProfileResponse {
+  nickname: string;
+  dailyGoal: number;
+  reminderEnabled: boolean;
+  /** Effective HH:mm in challenge TIMEZONE. */
+  reminderTime: string;
+}
+
+export interface ProfileUpdate {
+  nickname?: string;
+  dailyGoal?: number;
+  reminderEnabled?: boolean;
+  /** HH:mm, or null to clear override to the global default. */
+  reminderTime?: string | null;
+}

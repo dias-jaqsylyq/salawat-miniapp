@@ -19,8 +19,14 @@ export function messageForApiError(err: unknown, fallback: string): string {
       return "Nickname must be 1–50 characters.";
     case "nickname_taken":
       return "That nickname is taken — try another.";
+    case "invalid_reminder_enabled":
+      return "Reminder setting is invalid.";
+    case "invalid_reminder_time":
+      return "Enter a valid reminder time (HH:mm).";
+    case "invalid_body":
+      return "Nothing to save — change something first.";
     case "rate_limited":
-      return "You're logging too fast — wait a moment and try again.";
+      return "You're doing that too fast — wait a moment and try again.";
     case "not_registered":
       return "Please register first.";
     case "missing_init_data":

@@ -1,9 +1,12 @@
+import { Settings } from "lucide-react";
 import type { DayBreakdown, RegisteredProgress } from "../api/types.ts";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 
 interface Props {
   progress: RegisteredProgress;
+  onOpenSettings: () => void;
 }
 
 function daysLeftCopy(progress: RegisteredProgress): string {
@@ -56,7 +59,7 @@ function WeekTracker({ days }: { days: DayBreakdown[] }) {
   );
 }
 
-export default function ProgressScreen({ progress }: Props) {
+export default function ProgressScreen({ progress, onOpenSettings }: Props) {
   const { nickname, total, todayTotal, dailyGoal, streak, last7Days } = progress;
   const percent = todayPercent(todayTotal, dailyGoal);
 
@@ -64,11 +67,23 @@ export default function ProgressScreen({ progress }: Props) {
     <div className="mx-auto max-w-sm px-4 py-6">
       <Card>
         <CardHeader>
-          <CardTitle className="text-2xl font-bold tracking-tight">
-            <span className={streak > 0 ? "text-foreground" : "text-muted-foreground"}>
-              {streakCopy(streak)}
-            </span>
-          </CardTitle>
+          <div className="flex items-start justify-between gap-3">
+            <CardTitle className="text-2xl font-bold tracking-tight">
+              <span className={streak > 0 ? "text-foreground" : "text-muted-foreground"}>
+                {streakCopy(streak)}
+              </span>
+            </CardTitle>
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              onClick={onOpenSettings}
+              aria-label="Open settings"
+              className="-mr-2 -mt-1"
+            >
+              <Settings className="h-5 w-5" />
+            </Button>
+          </div>
           <CardDescription>Keep it up, {nickname}!</CardDescription>
         </CardHeader>
 

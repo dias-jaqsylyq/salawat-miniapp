@@ -1,4 +1,11 @@
-import type { LeaderboardResponse, LogResponse, ProgressResponse, RegisterResponse } from "./types.ts";
+import type {
+  LeaderboardResponse,
+  LogResponse,
+  ProfileResponse,
+  ProfileUpdate,
+  ProgressResponse,
+  RegisterResponse,
+} from "./types.ts";
 
 const BASE_URL = import.meta.env.VITE_API_URL;
 
@@ -47,4 +54,15 @@ export function getProgress(initData: string): Promise<ProgressResponse> {
 
 export function getLeaderboard(initData: string): Promise<LeaderboardResponse> {
   return request(initData, "/api/leaderboard");
+}
+
+export function getProfile(initData: string): Promise<ProfileResponse> {
+  return request(initData, "/api/profile");
+}
+
+export function patchProfile(initData: string, update: ProfileUpdate): Promise<ProfileResponse> {
+  return request(initData, "/api/profile", {
+    method: "PATCH",
+    body: JSON.stringify(update),
+  });
 }
