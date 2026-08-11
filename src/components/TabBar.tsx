@@ -1,12 +1,13 @@
-import { ChartColumn, Plus, Trophy, type LucideIcon } from "lucide-react";
+import { ChartColumn, Plus, Shield, Trophy, type LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-export type Tab = "progress" | "log" | "leaderboard";
+export type Tab = "progress" | "log" | "leaderboard" | "admin";
 
 const TABS: { id: Tab; label: string; icon: LucideIcon }[] = [
   { id: "progress", label: "Progress", icon: ChartColumn },
   { id: "log", label: "Log", icon: Plus },
   { id: "leaderboard", label: "Leaderboard", icon: Trophy },
+  { id: "admin", label: "Admin", icon: Shield },
 ];
 
 interface Props {
@@ -14,12 +15,20 @@ interface Props {
   onChange: (tab: Tab) => void;
   /** When true, ignore tab presses (e.g. while flushing pending Log taps). */
   disabled?: boolean;
+  /** Admin navigation is omitted entirely for non-admin accounts. */
+  showAdmin?: boolean;
 }
 
-export default function TabBar({ activeTab, onChange, disabled = false }: Props) {
+export default function TabBar({
+  activeTab,
+  onChange,
+  disabled = false,
+  showAdmin = false,
+}: Props) {
+  const visibleTabs = showAdmin ? TABS : TABS.filter((tab) => tab.id !== "admin");
   return (
     <nav className="fixed inset-x-0 bottom-0 flex border-t bg-card pb-[env(safe-area-inset-bottom)]">
-      {TABS.map((tab) => {
+      {visibleTabs.map((tab) => {
         const Icon = tab.icon;
         const isActive = activeTab === tab.id;
         return (

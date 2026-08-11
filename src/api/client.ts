@@ -1,4 +1,8 @@
 import type {
+  AdminBroadcastPayload,
+  AdminBroadcastResponse,
+  AdminStatsResponse,
+  AdminStatusResponse,
   DayOverrideResponse,
   LeaderboardResponse,
   LogResponse,
@@ -26,6 +30,26 @@ async function request<T>(initData: string, path: string, init?: RequestInit): P
       ...(init?.body ? { "Content-Type": "application/json" } : {}),
       Authorization: `tma ${initData}`,
     },
+  });
+
+  const body = await res.json().catch(() => null);
+  if (!res.ok) {
+    throw new ApiError(res.status, body?.error ?? "unknown_error");
+  }
+  return body as T;
+}
+
+async function multipartRequest<T>(
+  initData: string,
+  path: string,
+  formData: FormData
+): Promise<T> {
+  const res = await fetch(`${BASE_URL}${path}`, {
+    method: "POST",
+    headers: {
+      Authorization: `tma ${initData}`,
+    },
+    body: formData,
   });
 
   const body = await res.json().catch(() => null);
@@ -77,4 +101,33 @@ export function patchProfile(initData: string, update: ProfileUpdate): Promise<P
     method: "PATCH",
     body: JSON.stringify(update),
   });
+}
+
+export function getIsAdmin(initData: string): Promise<AdminStatusResponse> {
+  return request(initData, "/api/is-admin");
+}
+
+export function getAdminStats(initData: string): Promise<AdminStatsResponse> {
+  return request(initData, "/api/admin/stats");
+}
+
+export function broadcastAdminContent(
+  initData: string,
+  payload: AdminBroadcastPayload
+): Promise<AdminBroadcastResponse> {
+  return request(initData, "/api/admin/broadcast", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+}
+
+export function broadcastAdminPdf(
+  initData: string,
+  file: File,
+  message?: string
+): Promise<AdminBroadcastResponse> {
+  const formData = new FormData();
+  formData.append("file", file);
+  if (message?.trim()) formData.append("message", message.trim());
+  return multipartRequest(initData, "/api/admin/broadcast-file", formData);
 }
