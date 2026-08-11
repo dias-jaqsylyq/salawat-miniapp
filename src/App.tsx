@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { useTelegram } from "./telegram/useTelegram.ts";
-import { getProgress } from "./api/client.ts";
+import { getIsAdmin, getProgress } from "./api/client.ts";
 import { messageForApiError } from "./api/errors.ts";
 import type { ChallengeMeta, DayBreakdown, RegisteredProgress } from "./api/types.ts";
 import RegistrationScreen from "./screens/RegistrationScreen.tsx";
@@ -8,6 +8,7 @@ import LogSalawatScreen from "./screens/LogSalawatScreen.tsx";
 import ProgressScreen from "./screens/ProgressScreen.tsx";
 import LeaderboardScreen from "./screens/LeaderboardScreen.tsx";
 import SettingsScreen from "./screens/SettingsScreen.tsx";
+import AdminScreen from "./screens/AdminScreen.tsx";
 import CelebrationOverlay from "./components/CelebrationOverlay.tsx";
 import TabBar, { type Tab } from "./components/TabBar.tsx";
 import { Button } from "@/components/ui/button";
@@ -49,6 +50,7 @@ export default function App() {
   const [activeTab, setActiveTab] = useState<Tab>("progress");
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [tabSwitching, setTabSwitching] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
   const [celebrationQueue, setCelebrationQueue] = useState<CelebrationEvent[]>([]);
   const [activeCelebration, setActiveCelebration] = useState<CelebrationEvent | null>(null);
 
@@ -87,6 +89,7 @@ export default function App() {
   const handleTabChange = useCallback(
     async (next: Tab) => {
       if (next === activeTab || tabSwitching) return;
+      if (next === "admin" && !isAdmin) return;
 
       if (activeTab === "log" && next !== "log") {
         const flush = flushLogRef.current;
@@ -105,7 +108,7 @@ export default function App() {
 
       setActiveTab(next);
     },
-    [activeTab, tabSwitching],
+    [activeTab, tabSwitching, isAdmin],
   );
 
   const openSettings = useCallback(() => setSettingsOpen(true), []);
@@ -167,6 +170,29 @@ export default function App() {
       void loadProgress();
     }
   }, [available, loadProgress]);
+
+  useEffect(() => {
+    if (!available) {
+      setIsAdmin(false);
+      return;
+    }
+    let cancelled = false;
+    void getIsAdmin(initData)
+      .then((result) => {
+        if (!cancelled) setIsAdmin(result.isAdmin);
+      })
+      .catch(() => {
+        // Fail closed without breaking the participant experience.
+        if (!cancelled) setIsAdmin(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [available, initData]);
+
+  useEffect(() => {
+    if (!isAdmin && activeTab === "admin") setActiveTab("progress");
+  }, [activeTab, isAdmin]);
 
   // Refetch progress whenever the Progress tab is shown (keep prior UI; no loading flash).
   useEffect(() => {
@@ -257,10 +283,14 @@ export default function App() {
           {activeTab === "leaderboard" && (
             <LeaderboardScreen initData={initData} progress={state.progress} />
           )}
+          {activeTab === "admin" && isAdmin && (
+            <AdminScreen initData={initData} />
+          )}
           <TabBar
             activeTab={activeTab}
             onChange={(tab) => void handleTabChange(tab)}
             disabled={tabSwitching}
+            showAdmin={isAdmin}
           />
         </div>
       )}

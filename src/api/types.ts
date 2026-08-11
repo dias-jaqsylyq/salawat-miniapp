@@ -85,3 +85,23 @@ export interface ProfileUpdate {
   /** HH:mm, or null to clear override to the global default. */
   reminderTime?: string | null;
 }
+
+export interface AdminStatusResponse {
+  isAdmin: boolean;
+}
+
+export interface AdminStatsResponse {
+  participantCount: number;
+}
+
+export type AdminBroadcastPayload =
+  | { type: "text"; message: string }
+  | { type: "link"; url: string; message?: string }
+  | { type: "file"; fileUrl: string; message?: string };
+
+export interface AdminBroadcastResponse {
+  success: true;
+  participantCount: number;
+  sentCount: number;
+  failedCount: number;
+}

@@ -29,6 +29,23 @@ export function messageForApiError(err: unknown, fallback: string): string {
       return "You're doing that too fast — wait a moment and try again.";
     case "not_registered":
       return "Please register first.";
+    case "not_admin":
+      return "This account does not have admin access.";
+    case "broadcast_in_progress":
+      return "Another broadcast is still sending — wait for it to finish.";
+    case "invalid_message":
+      return "Enter a message before sending.";
+    case "invalid_link":
+      return "Enter a valid HTTP or HTTPS link.";
+    case "invalid_file_url":
+      return "Enter a valid HTTPS document link.";
+    case "invalid_file":
+    case "invalid_pdf":
+      return "Choose a valid PDF file.";
+    case "file_too_large":
+      return "PDF must be 20 MB or smaller.";
+    case "invalid_caption":
+      return "The caption is too long.";
     case "missing_init_data":
     case "invalid_init_data":
       return "Telegram session expired — close and reopen the app from the bot menu.";
