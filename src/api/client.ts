@@ -1,4 +1,5 @@
 import type {
+  DayOverrideResponse,
   LeaderboardResponse,
   LogResponse,
   ProfileResponse,
@@ -50,6 +51,17 @@ export function logSalawat(initData: string, count: number): Promise<LogResponse
 
 export function getProgress(initData: string): Promise<ProgressResponse> {
   return request(initData, "/api/progress");
+}
+
+export function putDayOverride(
+  initData: string,
+  date: string,
+  met: boolean
+): Promise<DayOverrideResponse> {
+  return request(initData, "/api/day-override", {
+    method: "PUT",
+    body: JSON.stringify({ date, met }),
+  });
 }
 
 export function getLeaderboard(initData: string): Promise<LeaderboardResponse> {

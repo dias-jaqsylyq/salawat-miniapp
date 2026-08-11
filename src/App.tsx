@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState, type ReactNode } from "react"
 import { useTelegram } from "./telegram/useTelegram.ts";
 import { getProgress } from "./api/client.ts";
 import { messageForApiError } from "./api/errors.ts";
-import type { ChallengeMeta, RegisteredProgress } from "./api/types.ts";
+import type { ChallengeMeta, DayBreakdown, RegisteredProgress } from "./api/types.ts";
 import RegistrationScreen from "./screens/RegistrationScreen.tsx";
 import LogSalawatScreen from "./screens/LogSalawatScreen.tsx";
 import ProgressScreen from "./screens/ProgressScreen.tsx";
@@ -111,6 +111,19 @@ export default function App() {
   const openSettings = useCallback(() => setSettingsOpen(true), []);
   const closeSettings = useCallback(() => setSettingsOpen(false), []);
 
+  const handleDayOverride = useCallback((update: { streak: number; last7Days: DayBreakdown[] }) => {
+    setState((prev) => {
+      if (prev.status !== "ready") return prev;
+      const nextProgress = {
+        ...prev.progress,
+        streak: update.streak,
+        last7Days: update.last7Days,
+      };
+      prevProgressRef.current = nextProgress;
+      return { status: "ready", progress: nextProgress };
+    });
+  }, []);
+
   const registerLogFlush = useCallback((flush: (() => Promise<void>) | null) => {
     flushLogRef.current = flush;
   }, []);
@@ -218,7 +231,12 @@ export default function App() {
       ) : (
         <div className="min-h-screen bg-background pb-16">
           {activeTab === "progress" && (
-            <ProgressScreen progress={state.progress} onOpenSettings={openSettings} />
+            <ProgressScreen
+              progress={state.progress}
+              initData={initData}
+              onOpenSettings={openSettings}
+              onDayOverride={handleDayOverride}
+            />
           )}
           {activeTab === "log" &&
             (state.progress.challengeStatus === "ended" ? (

@@ -45,4 +45,4 @@ npm run preview     # preview the production build locally
 - `App.tsx` — checks `GET /api/progress` on load to decide registration-gate vs. main app; holds the tab state and shared progress data.
 
 ## Notes / v1 scope
-Offline support, per-user reminder times, group-chat leaderboard embedding, admin export, and animations beyond the progress bar are intentionally out of scope (see the spec). Daily goals and streaks are shown on the Progress screen (backed by `GET /api/progress`).
+Offline support, group-chat leaderboard embedding, admin export, and animations beyond the progress bar are intentionally out of scope (see the spec). Daily goals and streaks are shown on the Progress screen (backed by `GET /api/progress`). Past days in the last-7 tracker can be toggled as makeup via `PUT /api/day-override` (does not change logged salawat totals).
