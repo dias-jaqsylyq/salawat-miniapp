@@ -14,7 +14,7 @@ export function messageForApiError(err: unknown, fallback: string): string {
     case "invalid_count":
       return "Enter a whole number between 1 and 10,000.";
     case "invalid_goal":
-      return "Enter a valid positive goal.";
+      return "Enter a valid positive daily goal.";
     case "invalid_nickname":
       return "Nickname must be 1–50 characters.";
     case "nickname_taken":

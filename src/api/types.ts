@@ -22,14 +22,26 @@ export type ProgressResponse =
   | ({ registered: false } & ChallengeMeta)
   | RegisteredProgress;
 
+export interface DayBreakdown {
+  /** YYYY-MM-DD in the challenge TIMEZONE. */
+  date: string;
+  total: number;
+  metGoal: boolean;
+}
+
 export interface RegisteredProgress extends ChallengeMeta {
   registered: true;
   nickname: string;
+  /** All-time salawat total. */
   total: number;
   /** Salawat logged today using the challenge TIMEZONE day boundary. */
   todayTotal: number;
-  goal: number;
-  percentComplete: number;
+  /** Daily salawat target (`users.goal` on the backend). */
+  dailyGoal: number;
+  /** Consecutive met days (TIMEZONE-aware; see backend streak rules). */
+  streak: number;
+  /** Past 7 days including today, oldest → newest. */
+  last7Days: DayBreakdown[];
   daysLeft: number;
 }
 
