@@ -117,7 +117,12 @@ export default function App() {
             </p>
           </div>
         ) : (
-          <LogSalawatScreen initData={initData} onLogged={() => void loadProgress()} />
+          <LogSalawatScreen
+            initData={initData}
+            total={state.progress.total}
+            todayTotal={state.progress.todayTotal ?? 0}
+            onLogged={() => void loadProgress()}
+          />
         ))}
       {activeTab === "leaderboard" && <LeaderboardScreen initData={initData} />}
       <TabBar activeTab={activeTab} onChange={setActiveTab} />
