@@ -37,24 +37,39 @@ export default function App() {
   const [state, setState] = useState<LoadState>({ status: "loading" });
   const [activeTab, setActiveTab] = useState<Tab>("progress");
   const [settingsOpen, setSettingsOpen] = useState(false);
-  const flushLogRef = useRef<(() => void) | null>(null);
+  const [tabSwitching, setTabSwitching] = useState(false);
+  const flushLogRef = useRef<(() => Promise<void>) | null>(null);
 
   useSyncDarkMode();
 
   const handleTabChange = useCallback(
-    (next: Tab) => {
+    async (next: Tab) => {
+      if (next === activeTab || tabSwitching) return;
+
       if (activeTab === "log" && next !== "log") {
-        flushLogRef.current?.();
+        const flush = flushLogRef.current;
+        if (flush) {
+          setTabSwitching(true);
+          try {
+            await flush();
+          } catch {
+            // Stay on Log — LogSalawatScreen already surfaces the error.
+            return;
+          } finally {
+            setTabSwitching(false);
+          }
+        }
       }
+
       setActiveTab(next);
     },
-    [activeTab],
+    [activeTab, tabSwitching],
   );
 
   const openSettings = useCallback(() => setSettingsOpen(true), []);
   const closeSettings = useCallback(() => setSettingsOpen(false), []);
 
-  const registerLogFlush = useCallback((flush: (() => void) | null) => {
+  const registerLogFlush = useCallback((flush: (() => Promise<void>) | null) => {
     flushLogRef.current = flush;
   }, []);
 
@@ -84,6 +99,14 @@ export default function App() {
       void loadProgress();
     }
   }, [available, loadProgress]);
+
+  // Refetch progress whenever the Progress tab is shown (keep prior UI; no loading flash).
+  useEffect(() => {
+    if (state.status !== "ready") return;
+    if (settingsOpen) return;
+    if (activeTab !== "progress") return;
+    void loadProgress();
+  }, [activeTab, settingsOpen, state.status, loadProgress]);
 
   if (!available) {
     return (
@@ -163,7 +186,11 @@ export default function App() {
       {activeTab === "leaderboard" && (
         <LeaderboardScreen initData={initData} progress={state.progress} />
       )}
-      <TabBar activeTab={activeTab} onChange={handleTabChange} />
+      <TabBar
+        activeTab={activeTab}
+        onChange={(tab) => void handleTabChange(tab)}
+        disabled={tabSwitching}
+      />
     </div>
   );
 }

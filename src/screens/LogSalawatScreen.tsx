@@ -9,8 +9,11 @@ interface Props {
   todayTotal: number;
   /** Called after a successful log so the caller can refresh shared progress state. */
   onLogged: () => void;
-  /** Registers a flush callback the parent can invoke before leaving this tab. */
-  onRegisterFlush?: (flush: (() => void) | null) => void;
+  /**
+   * Registers a flush callback the parent can await before leaving this tab.
+   * Resolves when pending taps are fully drained; rejects if a flush POST fails.
+   */
+  onRegisterFlush?: (flush: (() => Promise<void>) | null) => void;
 }
 
 const QUICK_ADD = [10, 50, 100];
@@ -75,6 +78,7 @@ export default function LogSalawatScreen({
   const onLoggedRef = useRef(onLogged);
   const serverTodayRef = useRef(serverToday);
   const flushRef = useRef<(mode: "batch" | "all") => Promise<void>>(async () => {});
+  const flushWaitersRef = useRef<Array<{ resolve: () => void; reject: (err: unknown) => void }>>([]);
 
   initDataRef.current = initData;
   onLoggedRef.current = onLogged;
@@ -92,6 +96,18 @@ export default function LogSalawatScreen({
     };
   }, []);
 
+  function resolveFlushWaiters() {
+    const waiters = flushWaitersRef.current;
+    flushWaitersRef.current = [];
+    for (const waiter of waiters) waiter.resolve();
+  }
+
+  function rejectFlushWaiters(err: unknown) {
+    const waiters = flushWaitersRef.current;
+    flushWaitersRef.current = [];
+    for (const waiter of waiters) waiter.reject(err);
+  }
+
   const flush = useCallback(async (mode: "batch" | "all") => {
     if (inFlightRef.current) {
       if (mode === "all") flushAllAfterRef.current = true;
@@ -100,7 +116,10 @@ export default function LogSalawatScreen({
 
     const pending = pendingRef.current;
     const n = mode === "all" ? pending : Math.min(AUTO_SUBMIT_EVERY, pending);
-    if (n <= 0) return;
+    if (n <= 0) {
+      if (mode === "all") resolveFlushWaiters();
+      return;
+    }
 
     inFlightRef.current = true;
     pendingRef.current = pending - n;
@@ -128,9 +147,11 @@ export default function LogSalawatScreen({
       flushAllAfterRef.current = false;
 
       if (wantAll && pendingRef.current > 0) {
-        void flushRef.current("all");
+        await flushRef.current("all");
       } else if (pendingRef.current >= AUTO_SUBMIT_EVERY) {
         void flushRef.current("batch");
+      } else if (wantAll) {
+        resolveFlushWaiters();
       }
     } catch (err) {
       pendingRef.current += n;
@@ -143,13 +164,20 @@ export default function LogSalawatScreen({
         setSyncStatus("error");
         setError(messageForApiError(err, "Couldn't log that — please try again."));
       }
+      rejectFlushWaiters(err);
     }
   }, []);
 
   flushRef.current = flush;
 
-  const flushAll = useCallback(() => {
-    void flush("all");
+  const flushAll = useCallback((): Promise<void> => {
+    if (pendingRef.current <= 0 && !inFlightRef.current) {
+      return Promise.resolve();
+    }
+    return new Promise<void>((resolve, reject) => {
+      flushWaitersRef.current.push({ resolve, reject });
+      void flush("all");
+    });
   }, [flush]);
 
   useEffect(() => {
@@ -160,11 +188,11 @@ export default function LogSalawatScreen({
   useEffect(() => {
     const onHide = () => {
       if (document.visibilityState === "hidden") {
-        flushAll();
+        void flushAll().catch(() => {});
       }
     };
     const onPageHide = () => {
-      flushAll();
+      void flushAll().catch(() => {});
     };
     document.addEventListener("visibilitychange", onHide);
     window.addEventListener("pagehide", onPageHide);
