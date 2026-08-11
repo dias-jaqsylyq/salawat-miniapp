@@ -1,4 +1,4 @@
-From a54bcfbdc8715db94ac28d1618b1f388c3631801 Mon Sep 17 00:00:00 2001
+From ba063585c402791213189bf10a754de2280d9146 Mon Sep 17 00:00:00 2001
 From: Cursor Agent <cursoragent@cursor.com>
 Date: Tue, 11 Aug 2026 06:31:09 +0000
 Subject: [PATCH] Add per-day goal overrides for streak makeup
@@ -9,8 +9,6 @@ authoritative. Today stays locked to live logs. Widen log fetch
 to cover the visible week before challenge start.
 ---
  README.md                        |  11 ++-
- repro-streak-bug.ts              |  74 +++++++++++++++++++++
- repro-streak-ok.ts               |  47 +++++++++++++
  src/api/routes/dayOverride.ts    |  56 ++++++++++++++++
  src/api/routes/progress.ts       |  41 +++---------
  src/api/routes/progressFields.ts |  69 +++++++++++++++++++
@@ -19,9 +17,7 @@ to cover the visible week before challenge start.
  src/db/schema.sql                |   9 +++
  src/utils/streak.test.ts         | 111 ++++++++++++++++++++++++++++++-
  src/utils/streak.ts              |  41 +++++++++---
- 11 files changed, 449 insertions(+), 43 deletions(-)
- create mode 100644 repro-streak-bug.ts
- create mode 100644 repro-streak-ok.ts
+ 9 files changed, 328 insertions(+), 43 deletions(-)
  create mode 100644 src/api/routes/dayOverride.ts
  create mode 100644 src/api/routes/progressFields.ts
 
@@ -49,139 +45,6 @@ index e6879a4..39ac24f 100644
  **GET /api/leaderboard**
  → `200 { jamaatTotal, leaderboard: [{ nickname, total, rank, telegramId }] }`
  - `jamaatTotal`: sum of all registered users' all-time totals
-diff --git a/repro-streak-bug.ts b/repro-streak-bug.ts
-new file mode 100644
-index 0000000..d16f522
---- /dev/null
-+++ b/repro-streak-bug.ts
-@@ -0,0 +1,74 @@
-+process.env.BOT_TOKEN = "test-token";
-+process.env.CHALLENGE_START_DATE = "2026-08-15";
-+process.env.CHALLENGE_END_DATE = "2026-09-13";
-+process.env.TIMEZONE = "Asia/Hong_Kong";
-+process.env.DB_PATH = "/tmp/salawat-repro.db";
-+process.env.CORS_ORIGIN = "*";
-+process.env.MINI_APP_URL = "https://example.com";
-+process.env.MINI_APP_DEEP_LINK = "https://t.me/x";
-+
-+import { rmSync } from "node:fs";
-+rmSync("/tmp/salawat-repro.db", { force: true });
-+rmSync("/tmp/salawat-repro.db-wal", { force: true });
-+rmSync("/tmp/salawat-repro.db-shm", { force: true });
-+
-+const { db } = await import("./src/db/client.ts");
-+const {
-+  createUser,
-+  addLog,
-+  getUserTodayTotal,
-+  getUserLogsSince,
-+  getUserTotal,
-+} = await import("./src/db/repository.ts");
-+const {
-+  getUtcRangeForDate,
-+  getTodayUtcRange,
-+  getTodayInTimezone,
-+  dayKeyFromSqliteUtc,
-+  formatDateParts,
-+  getChallengeStatus,
-+} = await import("./src/utils/challenge.ts");
-+const { bucketLogsByDay, buildLast7Days, computeStreak } = await import("./src/utils/streak.ts");
-+const { config } = await import("./src/config.ts");
-+
-+const user = createUser(12345, "Repro", 100);
-+for (let i = 0; i < 10; i++) addLog(user.id, 100);
-+
-+const { startUtc, endUtc } = getTodayUtcRange();
-+const todayTotal = getUserTodayTotal(user.id, startUtc, endUtc);
-+const todayParts = getTodayInTimezone(config.timezone);
-+const challengeStartUtc = getUtcRangeForDate(config.challengeStartDate).startUtc;
-+const logs = getUserLogsSince(user.id, challengeStartUtc);
-+const allLogs = db.prepare("SELECT logged_at, count FROM logs WHERE user_id = ?").all(user.id) as {
-+  logged_at: string;
-+  count: number;
-+}[];
-+const totalsByDate = bucketLogsByDay(logs, (loggedAt) =>
-+  dayKeyFromSqliteUtc(loggedAt, config.timezone)
-+);
-+const streak = computeStreak(100, totalsByDate, todayParts, config.challengeStartDate);
-+const last7Days = buildLast7Days(100, totalsByDate, todayParts);
-+
-+// Also: what if challenge already started (Aug 1)?
-+console.log(
-+  JSON.stringify(
-+    {
-+      scenario: "challenge starts Aug 15, today Aug 11",
-+      hktToday: formatDateParts(todayParts),
-+      challengeStart: formatDateParts(config.challengeStartDate),
-+      challengeStartUtc,
-+      todayRange: { startUtc, endUtc },
-+      todayTotal,
-+      total: getUserTotal(user.id),
-+      logsFetchedForStreak: logs.length,
-+      allLogsCount: allLogs.length,
-+      sampleLoggedAt: allLogs[0]?.logged_at,
-+      totalsByDate: Object.fromEntries(totalsByDate),
-+      streak,
-+      last7DayTotals: last7Days.map((d) => ({ date: d.date, total: d.total, metGoal: d.metGoal })),
-+      challengeStatus: getChallengeStatus(),
-+    },
-+    null,
-+    2
-+  )
-+);
-diff --git a/repro-streak-ok.ts b/repro-streak-ok.ts
-new file mode 100644
-index 0000000..4788610
---- /dev/null
-+++ b/repro-streak-ok.ts
-@@ -0,0 +1,47 @@
-+process.env.BOT_TOKEN = "test-token";
-+process.env.CHALLENGE_START_DATE = "2026-08-01";
-+process.env.CHALLENGE_END_DATE = "2026-08-31";
-+process.env.TIMEZONE = "Asia/Hong_Kong";
-+process.env.DB_PATH = "/tmp/salawat-repro-ok.db";
-+process.env.CORS_ORIGIN = "*";
-+process.env.MINI_APP_URL = "https://example.com";
-+process.env.MINI_APP_DEEP_LINK = "https://t.me/x";
-+
-+import { rmSync } from "node:fs";
-+for (const p of ["/tmp/salawat-repro-ok.db", "/tmp/salawat-repro-ok.db-wal", "/tmp/salawat-repro-ok.db-shm"]) {
-+  rmSync(p, { force: true });
-+}
-+
-+const { createUser, addLog, getUserTodayTotal, getUserLogsSince } = await import("./src/db/repository.ts");
-+const {
-+  getUtcRangeForDate,
-+  getTodayUtcRange,
-+  getTodayInTimezone,
-+  dayKeyFromSqliteUtc,
-+  formatDateParts,
-+  getChallengeStatus,
-+} = await import("./src/utils/challenge.ts");
-+const { bucketLogsByDay, buildLast7Days, computeStreak } = await import("./src/utils/streak.ts");
-+const { config } = await import("./src/config.ts");
-+
-+const user = createUser(12345, "Repro", 100);
-+for (let i = 0; i < 10; i++) addLog(user.id, 100);
-+
-+const { startUtc, endUtc } = getTodayUtcRange();
-+const todayTotal = getUserTodayTotal(user.id, startUtc, endUtc);
-+const todayParts = getTodayInTimezone(config.timezone);
-+const challengeStartUtc = getUtcRangeForDate(config.challengeStartDate).startUtc;
-+const logs = getUserLogsSince(user.id, challengeStartUtc);
-+const totalsByDate = bucketLogsByDay(logs, (loggedAt) =>
-+  dayKeyFromSqliteUtc(loggedAt, config.timezone)
-+);
-+console.log(JSON.stringify({
-+  scenario: "challenge started Aug 1",
-+  challengeStatus: getChallengeStatus(),
-+  todayTotal,
-+  streak: computeStreak(100, totalsByDate, todayParts, config.challengeStartDate),
-+  todayBucket: totalsByDate.get(formatDateParts(todayParts)),
-+  last7Today: buildLast7Days(100, totalsByDate, todayParts).at(-1),
-+  logsFetched: logs.length,
-+  challengeStartUtc,
-+}, null, 2));
 diff --git a/src/api/routes/dayOverride.ts b/src/api/routes/dayOverride.ts
 new file mode 100644
 index 0000000..027615e
