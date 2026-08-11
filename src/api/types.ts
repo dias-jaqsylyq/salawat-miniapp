@@ -49,9 +49,12 @@ export interface LeaderboardEntry {
   nickname: string;
   total: number;
   rank: number;
+  telegramId: number;
 }
 
 export interface LeaderboardResponse {
+  /** Sum of all registered users' all-time totals. */
+  jamaatTotal: number;
   leaderboard: LeaderboardEntry[];
 }
 

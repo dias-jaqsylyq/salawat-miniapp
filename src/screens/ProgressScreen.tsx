@@ -1,5 +1,6 @@
 import { Settings } from "lucide-react";
 import type { DayBreakdown, RegisteredProgress } from "../api/types.ts";
+import { daysLeftCopy } from "../lib/challengeCopy.ts";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
@@ -7,16 +8,6 @@ import { Progress } from "@/components/ui/progress";
 interface Props {
   progress: RegisteredProgress;
   onOpenSettings: () => void;
-}
-
-function daysLeftCopy(progress: RegisteredProgress): string {
-  if (progress.challengeStatus === "ended") {
-    return `Challenge ended on ${progress.challengeEndDate}.`;
-  }
-  if (progress.daysLeft === 0) {
-    return "Today is the last day!";
-  }
-  return `${progress.daysLeft} day${progress.daysLeft === 1 ? "" : "s"} left in the challenge.`;
 }
 
 function streakCopy(streak: number): string {

@@ -160,7 +160,9 @@ export default function App() {
             onRegisterFlush={registerLogFlush}
           />
         ))}
-      {activeTab === "leaderboard" && <LeaderboardScreen initData={initData} />}
+      {activeTab === "leaderboard" && (
+        <LeaderboardScreen initData={initData} progress={state.progress} />
+      )}
       <TabBar activeTab={activeTab} onChange={handleTabChange} />
     </div>
   );
