@@ -7,6 +7,7 @@ import RegistrationScreen from "./screens/RegistrationScreen.tsx";
 import LogSalawatScreen from "./screens/LogSalawatScreen.tsx";
 import ProgressScreen from "./screens/ProgressScreen.tsx";
 import LeaderboardScreen from "./screens/LeaderboardScreen.tsx";
+import SettingsScreen from "./screens/SettingsScreen.tsx";
 import TabBar, { type Tab } from "./components/TabBar.tsx";
 import { Button } from "@/components/ui/button";
 
@@ -35,6 +36,7 @@ export default function App() {
   const { initData, available } = useTelegram();
   const [state, setState] = useState<LoadState>({ status: "loading" });
   const [activeTab, setActiveTab] = useState<Tab>("progress");
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const flushLogRef = useRef<(() => void) | null>(null);
 
   useSyncDarkMode();
@@ -48,6 +50,9 @@ export default function App() {
     },
     [activeTab],
   );
+
+  const openSettings = useCallback(() => setSettingsOpen(true), []);
+  const closeSettings = useCallback(() => setSettingsOpen(false), []);
 
   const registerLogFlush = useCallback((flush: (() => void) | null) => {
     flushLogRef.current = flush;
@@ -121,9 +126,24 @@ export default function App() {
     return <RegistrationScreen initData={initData} onRegistered={() => void loadProgress()} />;
   }
 
+  if (settingsOpen) {
+    return (
+      <div className="min-h-screen bg-background">
+        <SettingsScreen
+          initData={initData}
+          challenge={state.progress}
+          onBack={closeSettings}
+          onSaved={() => void loadProgress()}
+        />
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-background pb-16">
-      {activeTab === "progress" && <ProgressScreen progress={state.progress} />}
+      {activeTab === "progress" && (
+        <ProgressScreen progress={state.progress} onOpenSettings={openSettings} />
+      )}
       {activeTab === "log" &&
         (state.progress.challengeStatus === "ended" ? (
           <div className="mx-auto max-w-sm px-4 py-6">
