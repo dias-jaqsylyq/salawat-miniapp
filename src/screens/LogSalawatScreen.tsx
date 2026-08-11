@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { logSalawat } from "../api/client.ts";
 import { messageForApiError } from "../api/errors.ts";
+import { hapticMedium } from "../lib/haptics.ts";
 import { Button } from "@/components/ui/button";
 
 interface Props {
@@ -31,14 +32,6 @@ const SALAWAT = {
 } as const;
 
 type SyncStatus = "synced" | "pending" | "syncing" | "error";
-
-function vibrate() {
-  if (window.Telegram?.WebApp?.HapticFeedback) {
-    window.Telegram.WebApp.HapticFeedback.impactOccurred("medium");
-  } else if (navigator.vibrate) {
-    navigator.vibrate(50);
-  }
-}
 
 function syncLabel(status: SyncStatus, pendingCount: number): string {
   switch (status) {
@@ -209,7 +202,7 @@ export default function LogSalawatScreen({
     setPendingCount(nextPending);
     setSyncStatus(inFlightRef.current ? "syncing" : "pending");
     setError(null);
-    vibrate();
+    hapticMedium();
 
     if (nextPending >= AUTO_SUBMIT_EVERY && !inFlightRef.current) {
       void flush("batch");
@@ -228,7 +221,7 @@ export default function LogSalawatScreen({
       if (!ok) return;
     }
 
-    vibrate();
+    hapticMedium();
     setQuickSubmitting(true);
     setError(null);
     try {
