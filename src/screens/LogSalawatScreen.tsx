@@ -1,8 +1,9 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
 import { logSalawat } from "../api/client.ts";
 import { messageForApiError } from "../api/errors.ts";
 import { hapticMedium } from "../lib/haptics.ts";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 
 interface Props {
   initData: string;
@@ -17,7 +18,6 @@ interface Props {
   onRegisterFlush?: (flush: (() => Promise<void>) | null) => void;
 }
 
-const QUICK_ADD = [10, 50, 100];
 /** Must stay in sync with salawat-bot MAX_LOG_COUNT. */
 const MAX_LOG_COUNT = 10_000;
 /** Honor-system confirm threshold for large submissions. */
@@ -57,7 +57,8 @@ export default function LogSalawatScreen({
   const [pendingCount, setPendingCount] = useState(0);
   const [inFlightClaim, setInFlightClaim] = useState(0);
   const [syncStatus, setSyncStatus] = useState<SyncStatus>("synced");
-  const [quickSubmitting, setQuickSubmitting] = useState(false);
+  const [amountInput, setAmountInput] = useState("");
+  const [amountSubmitting, setAmountSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   /** Server-confirmed totals; optimistic display adds pending + in-flight. */
   const [serverToday, setServerToday] = useState(todayTotal);
@@ -209,9 +210,18 @@ export default function LogSalawatScreen({
     }
   }
 
-  async function handleQuickAdd(count: number) {
-    if (quickSubmitting) return;
-    if (!Number.isInteger(count) || count <= 0) return;
+  async function handleAmountSubmit(e: FormEvent) {
+    e.preventDefault();
+    if (amountSubmitting) return;
+
+    const trimmed = amountInput.trim();
+    if (trimmed.length === 0) return;
+
+    const count = Number(trimmed);
+    if (!Number.isInteger(count) || count <= 0) {
+      setError("Enter a positive whole number.");
+      return;
+    }
     if (count > MAX_LOG_COUNT) {
       setError(`Maximum ${MAX_LOG_COUNT.toLocaleString()} salawat per submission.`);
       return;
@@ -221,19 +231,20 @@ export default function LogSalawatScreen({
       if (!ok) return;
     }
 
-    hapticMedium();
-    setQuickSubmitting(true);
+    setAmountSubmitting(true);
     setError(null);
     try {
       const { newTotal, newTodayTotal } = await logSalawat(initData, count);
+      hapticMedium();
       setSessionCount((c) => c + count);
       setServerTotal(newTotal);
       setServerToday(newTodayTotal ?? serverToday + count);
+      setAmountInput("");
       onLogged();
     } catch (err) {
       setError(messageForApiError(err, "Couldn't log that — please try again."));
     } finally {
-      setQuickSubmitting(false);
+      setAmountSubmitting(false);
     }
   }
 
@@ -287,20 +298,28 @@ export default function LogSalawatScreen({
         </p>
       </div>
 
-      <div className="grid grid-cols-3 gap-3">
-        {QUICK_ADD.map((n) => (
-          <Button
-            key={n}
-            type="button"
-            variant="secondary"
-            size="lg"
-            disabled={quickSubmitting}
-            onClick={() => void handleQuickAdd(n)}
-          >
-            +{n}
-          </Button>
-        ))}
-      </div>
+      <form onSubmit={(e) => void handleAmountSubmit(e)} className="flex items-stretch gap-3">
+        <Input
+          type="text"
+          inputMode="numeric"
+          pattern="[0-9]*"
+          placeholder="e.g. 25"
+          aria-label="Amount to add"
+          value={amountInput}
+          disabled={amountSubmitting}
+          onChange={(e) => setAmountInput(e.target.value)}
+          className="h-11 flex-1 text-base tabular-nums"
+        />
+        <Button
+          type="submit"
+          variant="default"
+          size="lg"
+          disabled={amountSubmitting || amountInput.trim().length === 0}
+          className="min-w-[5.5rem] shrink-0"
+        >
+          {amountSubmitting ? "Adding…" : "Add"}
+        </Button>
+      </form>
 
       {error && <p className="text-sm text-destructive">{error}</p>}
     </div>
