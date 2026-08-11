@@ -43,6 +43,26 @@ export const REMINDERS: readonly VirtueReminder[] = [
     narrator: "Fadalah ibn 'Ubayd",
     reference: "Jami' at-Tirmidhi 3477",
   },
+  {
+    kind: "hadith",
+    english:
+      "Whoever sends blessings upon me once, Allah will send blessings upon him tenfold, will erase ten sins from him, and will raise him ten degrees in status.",
+    narrator: "Anas ibn Malik",
+    reference: "Sunan an-Nasa'i 1297",
+  },
+  {
+    kind: "hadith",
+    english: "The closest of people to me on the Day of Resurrection are those who sent the most blessings upon me.",
+    narrator: "Ibn Mas'ud",
+    reference: "Jami' at-Tirmidhi 484",
+  },
+  {
+    kind: "hadith",
+    english:
+      "Whoever sends blessings upon Muhammad by saying, 'O Allah, grant him the seat near You on the Day of Resurrection,' then my intercession is ensured for him.",
+    narrator: "Ruwayfah ibn Thabit",
+    reference: "Musnad Ahmad 16991",
+  },
 ] as const;
 
 /** Fisher–Yates shuffle of a copy of REMINDERS (new order per session). */
