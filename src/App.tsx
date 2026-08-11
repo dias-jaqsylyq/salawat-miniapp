@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { useTelegram } from "./telegram/useTelegram.ts";
 import { getProgress } from "./api/client.ts";
 import { messageForApiError } from "./api/errors.ts";
@@ -35,8 +35,23 @@ export default function App() {
   const { initData, available } = useTelegram();
   const [state, setState] = useState<LoadState>({ status: "loading" });
   const [activeTab, setActiveTab] = useState<Tab>("progress");
+  const flushLogRef = useRef<(() => void) | null>(null);
 
   useSyncDarkMode();
+
+  const handleTabChange = useCallback(
+    (next: Tab) => {
+      if (activeTab === "log" && next !== "log") {
+        flushLogRef.current?.();
+      }
+      setActiveTab(next);
+    },
+    [activeTab],
+  );
+
+  const registerLogFlush = useCallback((flush: (() => void) | null) => {
+    flushLogRef.current = flush;
+  }, []);
 
   const loadProgress = useCallback(async () => {
     try {
@@ -122,10 +137,11 @@ export default function App() {
             total={state.progress.total}
             todayTotal={state.progress.todayTotal ?? 0}
             onLogged={() => void loadProgress()}
+            onRegisterFlush={registerLogFlush}
           />
         ))}
       {activeTab === "leaderboard" && <LeaderboardScreen initData={initData} />}
-      <TabBar activeTab={activeTab} onChange={setActiveTab} />
+      <TabBar activeTab={activeTab} onChange={handleTabChange} />
     </div>
   );
 }
