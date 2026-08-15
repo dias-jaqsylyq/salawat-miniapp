@@ -1,11 +1,13 @@
 import type {
   AdminBroadcastPayload,
   AdminBroadcastResponse,
+  AdminLeaderboardResponse,
   AdminStatsResponse,
   AdminStatusResponse,
   DayOverrideResponse,
   LeaderboardResponse,
   LogResponse,
+  LeaderboardPeriod,
   ProfileResponse,
   ProfileUpdate,
   ProgressResponse,
@@ -109,6 +111,27 @@ export function getIsAdmin(initData: string): Promise<AdminStatusResponse> {
 
 export function getAdminStats(initData: string): Promise<AdminStatsResponse> {
   return request(initData, "/api/admin/stats");
+}
+
+export function getAdminLeaderboard(
+  initData: string,
+  period: LeaderboardPeriod
+): Promise<AdminLeaderboardResponse> {
+  return request(initData, `/api/admin/leaderboard?period=${period}`);
+}
+
+export async function downloadAdminExport(
+  initData: string,
+  period: LeaderboardPeriod
+): Promise<Blob> {
+  const res = await fetch(`${BASE_URL}/api/admin/export-csv?period=${period}`, {
+    headers: { Authorization: `tma ${initData}` },
+  });
+  if (!res.ok) {
+    const body = await res.json().catch(() => null);
+    throw new ApiError(res.status, body?.error ?? "unknown_error");
+  }
+  return res.blob();
 }
 
 export function broadcastAdminContent(

@@ -28,7 +28,7 @@ export interface DayBreakdown {
   total: number;
   metGoal: boolean;
   /**
-   * True for days before the user was eligible (challenge start / registration).
+   * True for days before the user registered.
    * Not missed and not makeup-eligible. Optional for older API responses.
    */
   locked?: boolean;
@@ -92,6 +92,24 @@ export interface AdminStatusResponse {
 
 export interface AdminStatsResponse {
   participantCount: number;
+  mawlidStartDate: string;
+  mawlidEndDate: string;
+}
+
+export type LeaderboardPeriod = "all" | "mawlid";
+
+export interface AdminLeaderboardEntry {
+  rank: number;
+  nickname: string;
+  total: number;
+}
+
+export interface AdminLeaderboardResponse {
+  period: LeaderboardPeriod;
+  periodStart?: string;
+  periodEnd?: string;
+  jamaatTotal: number;
+  leaderboard: AdminLeaderboardEntry[];
 }
 
 export type AdminBroadcastPayload =

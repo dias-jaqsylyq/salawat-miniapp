@@ -7,10 +7,6 @@ export function messageForApiError(err: unknown, fallback: string): string {
   }
 
   switch (err.code) {
-    case "challenge_not_started":
-      return "The challenge hasn't started yet.";
-    case "challenge_ended":
-      return "The challenge has ended.";
     case "invalid_count":
       return "Enter a whole number between 1 and 10,000.";
     case "invalid_goal":
@@ -46,6 +42,10 @@ export function messageForApiError(err: unknown, fallback: string): string {
       return "PDF must be 20 MB or smaller.";
     case "invalid_caption":
       return "The caption is too long.";
+    case "invalid_period":
+      return "Choose a valid results period.";
+    case "export_disabled":
+      return "CSV export is not available.";
     case "missing_init_data":
     case "invalid_init_data":
       return "Telegram session expired — close and reopen the app from the bot menu.";

@@ -1,5 +1,12 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
-import { FileText, Link as LinkIcon, MessageSquareText, Users } from "lucide-react";
+import {
+  BarChart3,
+  FileText,
+  Link as LinkIcon,
+  Megaphone,
+  MessageSquareText,
+  Users,
+} from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import {
   broadcastAdminContent,
@@ -20,8 +27,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
+import AdminResults from "../components/AdminResults.tsx";
 
 type AdminMode = "text" | "link" | "pdf";
+type AdminSection = "broadcasts" | "results";
 
 const MAX_PDF_BYTES = 20 * 1024 * 1024;
 const MODES: {
@@ -52,8 +61,11 @@ function fileSizeLabel(bytes: number): string {
 }
 
 export default function AdminScreen({ initData }: Props) {
+  const [section, setSection] = useState<AdminSection>("broadcasts");
   const [mode, setMode] = useState<AdminMode>("text");
   const [participantCount, setParticipantCount] = useState<number | null>(null);
+  const [mawlidStartDate, setMawlidStartDate] = useState("");
+  const [mawlidEndDate, setMawlidEndDate] = useState("");
   const [textMessage, setTextMessage] = useState("");
   const [linkUrl, setLinkUrl] = useState("");
   const [linkCaption, setLinkCaption] = useState("");
@@ -69,7 +81,11 @@ export default function AdminScreen({ initData }: Props) {
     let cancelled = false;
     void getAdminStats(initData)
       .then((stats) => {
-        if (!cancelled) setParticipantCount(stats.participantCount);
+        if (!cancelled) {
+          setParticipantCount(stats.participantCount);
+          setMawlidStartDate(stats.mawlidStartDate);
+          setMawlidEndDate(stats.mawlidEndDate);
+        }
       })
       .catch((err) => {
         if (!cancelled) {
@@ -190,9 +206,9 @@ export default function AdminScreen({ initData }: Props) {
   return (
     <main className="mx-auto max-w-sm space-y-4 px-4 py-6">
       <div className="space-y-1">
-        <h1 className="text-2xl font-bold tracking-tight text-foreground">Admin Broadcasts</h1>
+        <h1 className="text-2xl font-bold tracking-tight text-foreground">Admin</h1>
         <p className="text-sm text-muted-foreground">
-          Send an update to every registered participant.
+          Broadcast updates and save live leaderboard results.
         </p>
       </div>
 
@@ -208,6 +224,40 @@ export default function AdminScreen({ initData }: Props) {
         </div>
       </div>
 
+      <div
+        role="tablist"
+        aria-label="Admin section"
+        className="grid grid-cols-2 gap-1 rounded-xl bg-secondary/60 p-1"
+      >
+        {([
+          { id: "broadcasts" as const, label: "Broadcasts", icon: Megaphone },
+          { id: "results" as const, label: "Results", icon: BarChart3 },
+        ]).map((item) => {
+          const Icon = item.icon;
+          const active = section === item.id;
+          return (
+            <button
+              key={item.id}
+              type="button"
+              role="tab"
+              aria-selected={active}
+              onClick={() => setSection(item.id)}
+              className={cn(
+                "flex min-h-11 items-center justify-center gap-2 rounded-lg px-3 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                active
+                  ? "bg-background text-foreground shadow-sm"
+                  : "text-muted-foreground hover:text-foreground"
+              )}
+            >
+              <Icon className="h-4 w-4" aria-hidden="true" />
+              {item.label}
+            </button>
+          );
+        })}
+      </div>
+
+      {section === "broadcasts" ? (
+        <>
       <div
         role="tablist"
         aria-label="Broadcast type"
@@ -423,6 +473,20 @@ export default function AdminScreen({ initData }: Props) {
           </CardContent>
         </Card>
       </form>
+        </>
+      ) : mawlidStartDate && mawlidEndDate ? (
+        <AdminResults
+          initData={initData}
+          mawlidStartDate={mawlidStartDate}
+          mawlidEndDate={mawlidEndDate}
+        />
+      ) : (
+        <Card>
+          <CardContent className="py-8 text-center text-sm text-muted-foreground">
+            Loading result periods…
+          </CardContent>
+        </Card>
+      )}
     </main>
   );
 }

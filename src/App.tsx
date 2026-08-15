@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState, type ReactNode } from "react"
 import { useTelegram } from "./telegram/useTelegram.ts";
 import { getIsAdmin, getProgress } from "./api/client.ts";
 import { messageForApiError } from "./api/errors.ts";
-import type { ChallengeMeta, DayBreakdown, RegisteredProgress } from "./api/types.ts";
+import type { DayBreakdown, RegisteredProgress } from "./api/types.ts";
 import RegistrationScreen from "./screens/RegistrationScreen.tsx";
 import LogSalawatScreen from "./screens/LogSalawatScreen.tsx";
 import ProgressScreen from "./screens/ProgressScreen.tsx";
@@ -24,8 +24,7 @@ import { resolveTelegramId } from "./lib/telegramId.ts";
 type LoadState =
   | { status: "loading" }
   | { status: "error"; message: string }
-  | { status: "challenge-closed"; meta: ChallengeMeta }
-  | { status: "needs-registration"; meta: ChallengeMeta }
+  | { status: "needs-registration" }
   | { status: "ready"; progress: RegisteredProgress };
 
 function Centered({ children }: { children: ReactNode }) {
@@ -135,12 +134,7 @@ export default function App() {
     try {
       const result = await getProgress(initData);
       if (!result.registered) {
-        // Only block new joiners after the challenge has ended.
-        if (result.challengeStatus === "ended") {
-          setState({ status: "challenge-closed", meta: result });
-          return;
-        }
-        setState({ status: "needs-registration", meta: result });
+        setState({ status: "needs-registration" });
         return;
       }
 
@@ -229,16 +223,6 @@ export default function App() {
     );
   }
 
-  if (state.status === "challenge-closed") {
-    return (
-      <Centered>
-        <p className="text-muted-foreground">
-          The challenge ended on {state.meta.challengeEndDate}.
-        </p>
-      </Centered>
-    );
-  }
-
   if (state.status === "needs-registration") {
     return <RegistrationScreen initData={initData} onRegistered={() => void loadProgress()} />;
   }
@@ -264,22 +248,15 @@ export default function App() {
               onDayOverride={handleDayOverride}
             />
           )}
-          {activeTab === "log" &&
-            (state.progress.challengeStatus === "ended" ? (
-              <div className="mx-auto max-w-sm px-4 py-6">
-                <p className="text-sm text-muted-foreground">
-                  Logging closed — the challenge ended on {state.progress.challengeEndDate}.
-                </p>
-              </div>
-            ) : (
-              <LogSalawatScreen
-                initData={initData}
-                total={state.progress.total}
-                todayTotal={state.progress.todayTotal ?? 0}
-                onLogged={() => void loadProgress()}
-                onRegisterFlush={registerLogFlush}
-              />
-            ))}
+          {activeTab === "log" && (
+            <LogSalawatScreen
+              initData={initData}
+              total={state.progress.total}
+              todayTotal={state.progress.todayTotal ?? 0}
+              onLogged={() => void loadProgress()}
+              onRegisterFlush={registerLogFlush}
+            />
+          )}
           {activeTab === "leaderboard" && (
             <LeaderboardScreen initData={initData} progress={state.progress} />
           )}
