@@ -86,6 +86,16 @@ export interface ProfileUpdate {
   reminderTime?: string | null;
 }
 
+export interface ResetProgressResponse {
+  success: true;
+  dropFromJamaat: boolean;
+  total: 0;
+  deleted: {
+    logs: number;
+    dayGoalOverrides: number;
+  };
+}
+
 export interface AdminStatusResponse {
   isAdmin: boolean;
 }

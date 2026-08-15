@@ -12,6 +12,7 @@ import type {
   ProfileUpdate,
   ProgressResponse,
   RegisterResponse,
+  ResetProgressResponse,
 } from "./types.ts";
 
 const BASE_URL = import.meta.env.VITE_API_URL;
@@ -102,6 +103,16 @@ export function patchProfile(initData: string, update: ProfileUpdate): Promise<P
   return request(initData, "/api/profile", {
     method: "PATCH",
     body: JSON.stringify(update),
+  });
+}
+
+export function resetProgress(
+  initData: string,
+  dropFromJamaat: boolean = false
+): Promise<ResetProgressResponse> {
+  return request(initData, "/api/reset-progress", {
+    method: "POST",
+    body: JSON.stringify({ dropFromJamaat }),
   });
 }
 
