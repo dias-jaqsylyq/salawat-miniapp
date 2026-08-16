@@ -2,6 +2,12 @@ import { useState, type FormEvent } from "react";
 import { Moon } from "lucide-react";
 import { register } from "../api/client.ts";
 import { messageForApiError } from "../api/errors.ts";
+import {
+  NICKNAME_MATCHES_REAL_NAME_MESSAGE,
+  REAL_NAME_MAX_LENGTH,
+  nicknameMatchesRealName,
+  validateRealName,
+} from "../lib/realName.ts";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -15,7 +21,12 @@ interface Props {
 /** Must stay in sync with salawat-bot MAX_GOAL. */
 const MAX_GOAL = 100_000_000;
 
-function validate(nickname: string, goal: string): string | null {
+function validate(realName: string, nickname: string, goal: string): string | null {
+  const realNameError = validateRealName(realName);
+  if (realNameError) return realNameError;
+  if (nicknameMatchesRealName(nickname, realName)) {
+    return NICKNAME_MATCHES_REAL_NAME_MESSAGE;
+  }
   const trimmed = nickname.trim();
   if (trimmed.length === 0 || trimmed.length > 50) {
     return "Nickname must be 1–50 characters.";
@@ -31,6 +42,7 @@ function validate(nickname: string, goal: string): string | null {
 }
 
 export default function RegistrationScreen({ initData, onRegistered }: Props) {
+  const [realName, setRealName] = useState("");
   const [nickname, setNickname] = useState("");
   const [goal, setGoal] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -40,7 +52,7 @@ export default function RegistrationScreen({ initData, onRegistered }: Props) {
     e.preventDefault();
     if (submitting) return;
 
-    const validationError = validate(nickname, goal);
+    const validationError = validate(realName, nickname, goal);
     if (validationError) {
       setError(validationError);
       return;
@@ -49,7 +61,7 @@ export default function RegistrationScreen({ initData, onRegistered }: Props) {
     setSubmitting(true);
     setError(null);
     try {
-      await register(initData, nickname.trim(), Number(goal));
+      await register(initData, realName.trim(), nickname.trim(), Number(goal));
       onRegistered();
     } catch (err) {
       setError(messageForApiError(err, "Couldn't register — please try again."));
@@ -71,6 +83,22 @@ export default function RegistrationScreen({ initData, onRegistered }: Props) {
           </CardHeader>
 
           <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="real-name">Full name (real name)</Label>
+              <Input
+                id="real-name"
+                type="text"
+                value={realName}
+                onChange={(e) => setRealName(e.target.value)}
+                maxLength={REAL_NAME_MAX_LENGTH}
+                autoComplete="name"
+                placeholder="e.g. Ali Nurlanov"
+              />
+              <p className="text-xs text-muted-foreground">
+                Only the challenge admin can see this. Other participants see your nickname.
+              </p>
+            </div>
+
             <div className="space-y-2">
               <Label htmlFor="nickname">Nickname</Label>
               <Input

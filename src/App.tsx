@@ -4,6 +4,7 @@ import { getIsAdmin, getProgress } from "./api/client.ts";
 import { messageForApiError } from "./api/errors.ts";
 import type { DayBreakdown, RegisteredProgress } from "./api/types.ts";
 import RegistrationScreen from "./screens/RegistrationScreen.tsx";
+import RealNamePromptScreen from "./screens/RealNamePromptScreen.tsx";
 import LogSalawatScreen from "./screens/LogSalawatScreen.tsx";
 import ProgressScreen from "./screens/ProgressScreen.tsx";
 import LeaderboardScreen from "./screens/LeaderboardScreen.tsx";
@@ -25,6 +26,7 @@ type LoadState =
   | { status: "loading" }
   | { status: "error"; message: string }
   | { status: "needs-registration" }
+  | { status: "needs-real-name"; progress: RegisteredProgress }
   | { status: "ready"; progress: RegisteredProgress };
 
 function Centered({ children }: { children: ReactNode }) {
@@ -150,6 +152,10 @@ export default function App() {
         enqueueCelebrations(events);
       }
       prevProgressRef.current = result;
+      if (result.needsRealName) {
+        setState({ status: "needs-real-name", progress: result });
+        return;
+      }
       setState({ status: "ready", progress: result });
     } catch (err) {
       setState({
@@ -225,6 +231,16 @@ export default function App() {
 
   if (state.status === "needs-registration") {
     return <RegistrationScreen initData={initData} onRegistered={() => void loadProgress()} />;
+  }
+
+  if (state.status === "needs-real-name") {
+    return (
+      <RealNamePromptScreen
+        initData={initData}
+        nickname={state.progress.nickname}
+        onSaved={() => void loadProgress()}
+      />
+    );
   }
 
   return (
