@@ -8,6 +8,7 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/componen
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import ResetProgressDangerZone from "../components/ResetProgressDangerZone.tsx";
 
 interface Props {
   initData: string;
@@ -216,6 +217,11 @@ export default function SettingsScreen({
           </CardFooter>
         </Card>
       </form>
+      <ResetProgressDangerZone
+        initData={initData}
+        onReset={onSaved}
+        onBack={onBack}
+      />
     </div>
   );
 }

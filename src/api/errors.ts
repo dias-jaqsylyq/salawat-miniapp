@@ -44,6 +44,8 @@ export function messageForApiError(err: unknown, fallback: string): string {
       return "The caption is too long.";
     case "invalid_period":
       return "Choose a valid results period.";
+    case "invalid_drop_from_jamaat":
+      return "The Jamaat total option is invalid.";
     case "export_disabled":
       return "CSV export is not available.";
     case "missing_init_data":
