@@ -22,7 +22,10 @@ export function messageForApiError(err: unknown, fallback: string): string {
     case "invalid_reminder_enabled":
       return "Reminder setting is invalid.";
     case "invalid_reminder_time":
+    case "invalid_fasting_reminder_time":
       return "Enter a valid reminder time (HH:mm).";
+    case "invalid_fasting_reminder_enabled":
+      return "Fasting reminder setting is invalid.";
     case "invalid_body":
       return "Nothing to save — change something first.";
     case "rate_limited":
