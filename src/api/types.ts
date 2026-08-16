@@ -78,6 +78,9 @@ export interface ProfileResponse {
   reminderEnabled: boolean;
   /** Effective HH:mm in challenge TIMEZONE. */
   reminderTime: string;
+  fastingReminderEnabled?: boolean;
+  /** HH:mm in challenge TIMEZONE. */
+  fastingReminderTime?: string;
 }
 
 export interface ProfileUpdate {
@@ -88,6 +91,8 @@ export interface ProfileUpdate {
   reminderTime?: string | null;
   /** Write-only; never returned from GET/PATCH /api/profile. */
   realName?: string;
+  fastingReminderEnabled?: boolean;
+  fastingReminderTime?: string;
 }
 
 export interface ResetProgressResponse {

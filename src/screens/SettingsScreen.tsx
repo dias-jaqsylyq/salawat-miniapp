@@ -24,7 +24,12 @@ interface Props {
 const MAX_GOAL = 100_000_000;
 const CONFIRM_MS = 900;
 
-function validate(nickname: string, dailyGoal: string, reminderTime: string): string | null {
+function validate(
+  nickname: string,
+  dailyGoal: string,
+  reminderTime: string,
+  fastingReminderTime: string
+): string | null {
   const trimmed = nickname.trim();
   if (trimmed.length === 0 || trimmed.length > 50) {
     return "Nickname must be 1–50 characters.";
@@ -36,7 +41,7 @@ function validate(nickname: string, dailyGoal: string, reminderTime: string): st
   if (goalNum > MAX_GOAL) {
     return `Daily goal must be at most ${MAX_GOAL.toLocaleString()}.`;
   }
-  if (!/^\d{2}:\d{2}$/.test(reminderTime)) {
+  if (!/^\d{2}:\d{2}$/.test(reminderTime) || !/^\d{2}:\d{2}$/.test(fastingReminderTime)) {
     return "Enter a valid reminder time (HH:mm).";
   }
   return null;
@@ -53,6 +58,8 @@ export default function SettingsScreen({
   const [dailyGoal, setDailyGoal] = useState("");
   const [reminderEnabled, setReminderEnabled] = useState(true);
   const [reminderTime, setReminderTime] = useState("20:00");
+  const [fastingReminderEnabled, setFastingReminderEnabled] = useState(false);
+  const [fastingReminderTime, setFastingReminderTime] = useState("20:00");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -69,6 +76,8 @@ export default function SettingsScreen({
         setDailyGoal(String(profile.dailyGoal));
         setReminderEnabled(profile.reminderEnabled);
         setReminderTime(profile.reminderTime);
+        setFastingReminderEnabled(profile.fastingReminderEnabled ?? false);
+        setFastingReminderTime(profile.fastingReminderTime ?? "20:00");
       })
       .catch((err) => {
         if (!cancelled) {
@@ -87,7 +96,7 @@ export default function SettingsScreen({
     e.preventDefault();
     if (saving || loading) return;
 
-    const validationError = validate(nickname, dailyGoal, reminderTime);
+    const validationError = validate(nickname, dailyGoal, reminderTime, fastingReminderTime);
     if (validationError) {
       setError(validationError);
       return;
@@ -102,6 +111,8 @@ export default function SettingsScreen({
         dailyGoal: Number(dailyGoal),
         reminderEnabled,
         reminderTime,
+        fastingReminderEnabled,
+        fastingReminderTime,
       });
       setConfirmation("Saved!");
       onSaved();
@@ -190,6 +201,36 @@ export default function SettingsScreen({
                     />
                     <p className="text-xs text-muted-foreground">
                       Times use the challenge timezone ({timezoneLabel}).
+                    </p>
+                  </div>
+                </section>
+
+                <section className="space-y-4">
+                  <h3 className="text-sm font-semibold text-foreground">Fasting Reminders</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Get a reminder every Sunday and Wednesday evening to prepare for the Sunnah fast of Monday and Thursday.
+                  </p>
+                  <div className="flex items-center justify-between gap-3">
+                    <Label htmlFor="settings-fasting-reminder-enabled" className="flex-1">
+                      Sunday & Wednesday reminder
+                    </Label>
+                    <Switch
+                      id="settings-fasting-reminder-enabled"
+                      checked={fastingReminderEnabled}
+                      onCheckedChange={setFastingReminderEnabled}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="settings-fasting-reminder-time">Reminder time</Label>
+                    <Input
+                      id="settings-fasting-reminder-time"
+                      type="time"
+                      value={fastingReminderTime}
+                      onChange={(e) => setFastingReminderTime(e.target.value)}
+                      disabled={!fastingReminderEnabled}
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      One time for both days, in {timezoneLabel}.
                     </p>
                   </div>
                 </section>
