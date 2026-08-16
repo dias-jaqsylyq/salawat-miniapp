@@ -54,6 +54,8 @@ export interface RegisteredProgress extends ChallengeMeta {
   /** Past 7 days including today, oldest → newest. */
   last7Days: DayBreakdown[];
   daysLeft: number;
+  /** True when the user is registered but has not provided a real name yet. */
+  needsRealName: boolean;
 }
 
 export interface LeaderboardEntry {
@@ -84,6 +86,8 @@ export interface ProfileUpdate {
   reminderEnabled?: boolean;
   /** HH:mm, or null to clear override to the global default. */
   reminderTime?: string | null;
+  /** Write-only; never returned from GET/PATCH /api/profile. */
+  realName?: string;
 }
 
 export interface ResetProgressResponse {
@@ -111,6 +115,7 @@ export type LeaderboardPeriod = "all" | "mawlid";
 export interface AdminLeaderboardEntry {
   rank: number;
   nickname: string;
+  realName: string | null;
   total: number;
 }
 

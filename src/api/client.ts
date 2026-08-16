@@ -62,10 +62,15 @@ async function multipartRequest<T>(
   return body as T;
 }
 
-export function register(initData: string, nickname: string, goal: number): Promise<RegisterResponse> {
+export function register(
+  initData: string,
+  realName: string,
+  nickname: string,
+  goal: number
+): Promise<RegisterResponse> {
   return request(initData, "/api/register", {
     method: "POST",
-    body: JSON.stringify({ nickname, goal }),
+    body: JSON.stringify({ realName, nickname, goal }),
   });
 }
 

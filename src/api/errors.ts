@@ -13,6 +13,10 @@ export function messageForApiError(err: unknown, fallback: string): string {
       return "Enter a valid positive daily goal.";
     case "invalid_nickname":
       return "Nickname must be 1–50 characters.";
+    case "invalid_real_name":
+      return "Full name must be 1–100 characters.";
+    case "nickname_matches_real_name":
+      return "Your nickname must be different from your real name";
     case "nickname_taken":
       return "That nickname is taken — try another.";
     case "invalid_reminder_enabled":

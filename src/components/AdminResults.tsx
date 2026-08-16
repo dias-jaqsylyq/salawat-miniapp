@@ -156,9 +156,14 @@ export default function AdminResults({
                   <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-secondary text-sm font-semibold tabular-nums text-secondary-foreground">
                     {entry.rank}
                   </div>
-                  <span className="min-w-0 flex-1 truncate text-sm font-medium text-foreground">
-                    {entry.nickname}
-                  </span>
+                  <div className="min-w-0 flex-1">
+                    <span className="block truncate text-sm font-medium text-foreground">
+                      {entry.nickname}
+                    </span>
+                    <span className="block truncate text-xs text-muted-foreground">
+                      {entry.realName?.trim() ? entry.realName : "—"}
+                    </span>
+                  </div>
                   <span className="shrink-0 text-sm tabular-nums text-muted-foreground">
                     {entry.total.toLocaleString()}
                   </span>
