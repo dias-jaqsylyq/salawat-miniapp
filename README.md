@@ -40,7 +40,7 @@ npm run preview     # preview the production build locally
 ## Structure
 - `src/telegram/` — `window.Telegram.WebApp` bootstrapping (`useTelegram` hook) and ambient types.
 - `src/api/` — fetch client (attaches `Authorization: tma <initData>` to every request) and response types mirroring the backend contract exactly.
-- `src/screens/` — Registration (one-time gate, includes private real name), optional real-name completion prompt for legacy users, Log Salawat, My Progress (with Settings), Leaderboard.
+- `src/screens/` — Incomplete-registration gate (directs users to bot `/start`), optional real-name completion prompt for legacy users, Log Salawat, My Progress (with Settings), Leaderboard, Admin.
 - `src/components/` — `TabBar`, `ProgressBar` (visual width clamped to 100%, numeric label uncapped).
 - `App.tsx` — checks `GET /api/progress` on load to decide registration-gate, real-name prompt (`needsRealName`), or main app; holds the tab state and shared progress data.
 

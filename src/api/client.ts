@@ -11,7 +11,6 @@ import type {
   ProfileResponse,
   ProfileUpdate,
   ProgressResponse,
-  RegisterResponse,
   ResetProgressResponse,
 } from "./types.ts";
 
@@ -60,18 +59,6 @@ async function multipartRequest<T>(
     throw new ApiError(res.status, body?.error ?? "unknown_error");
   }
   return body as T;
-}
-
-export function register(
-  initData: string,
-  realName: string,
-  nickname: string,
-  goal: number
-): Promise<RegisterResponse> {
-  return request(initData, "/api/register", {
-    method: "POST",
-    body: JSON.stringify({ realName, nickname, goal }),
-  });
 }
 
 export function logSalawat(initData: string, count: number): Promise<LogResponse> {

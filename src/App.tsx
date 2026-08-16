@@ -3,7 +3,7 @@ import { useTelegram } from "./telegram/useTelegram.ts";
 import { getIsAdmin, getProgress } from "./api/client.ts";
 import { messageForApiError } from "./api/errors.ts";
 import type { DayBreakdown, RegisteredProgress } from "./api/types.ts";
-import RegistrationScreen from "./screens/RegistrationScreen.tsx";
+import IncompleteRegistrationScreen from "./screens/IncompleteRegistrationScreen.tsx";
 import RealNamePromptScreen from "./screens/RealNamePromptScreen.tsx";
 import LogSalawatScreen from "./screens/LogSalawatScreen.tsx";
 import ProgressScreen from "./screens/ProgressScreen.tsx";
@@ -230,7 +230,7 @@ export default function App() {
   }
 
   if (state.status === "needs-registration") {
-    return <RegistrationScreen initData={initData} onRegistered={() => void loadProgress()} />;
+    return <IncompleteRegistrationScreen />;
   }
 
   if (state.status === "needs-real-name") {

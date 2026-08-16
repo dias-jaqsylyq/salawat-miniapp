@@ -31,7 +31,9 @@ export function messageForApiError(err: unknown, fallback: string): string {
     case "rate_limited":
       return "You're doing that too fast — wait a moment and try again.";
     case "not_registered":
-      return "Please register first.";
+      return "Please finish /start in the bot chat first.";
+    case "register_via_bot":
+      return "Registration happens in the bot — send /start there.";
     case "not_admin":
       return "This account does not have admin access.";
     case "broadcast_in_progress":
